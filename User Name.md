@@ -1,0 +1,39 @@
+# 🧾 User Stories - Plateforme d'achat/vente
+
+## 👤 Utilisateur
+
+- En tant qu'utilisateur, je peux **m'inscrire ou me connecter** pour accéder aux fonctionnalités personnalisées.
+- En tant qu'utilisateur, je peux **consulter les produits** sans avoir besoin de me connecter.
+- En tant qu'utilisateur, je peux **laisser un avis** sur un produit consulté.
+- En tant qu'utilisateur, je peux **acheter un produit** :
+  - Voir la **description** et la **catégorie** du produit.
+  - Choisir un **type de produit**.
+  - Procéder au **paiement** avec un **type de paiement** disponible.
+
+- En tant qu'utilisateur, je peux **ajouter un produit à vendre** :
+  - Renseigner une **description** et une **catégorie**.
+  - Recevoir une **alerte de vente** après achat.
+  - Suivre la **mise à jour de l'état de vente**.
+
+- En tant qu'utilisateur, je peux **signaler une annonce** en cas de contenu inapproprié.
+- En tant qu'utilisateur, je peux **gérer mon compte**.
+
+---
+
+## 🛠️ Administrateur
+
+- En tant qu'administrateur, je peux accéder à une interface de **gestion**.
+
+### 🔐 Gestion des comptes
+- Gérer les comptes utilisateurs.
+- Supprimer un compte.
+
+### 📢 Gestion des annonces
+- Gérer les annonces publiées.
+- Supprimer une annonce si nécessaire.
+
+### 💳 Gestion des types de paiement
+- Ajouter un type de paiement.
+- Modifier un type de paiement existant.
+
+---
