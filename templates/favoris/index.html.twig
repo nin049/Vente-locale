@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Favoris{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1>Mes Favoris</h1>
+    
+    {% if not api_disponible %}
+        <div class="alert alert-warning" role="alert">
+            ⚠️ L'API des favoris n'est pas disponible. Assurez-vous que l'API .NET est démarrée.
+            <br>
+            <small>Pour démarrer l'API : <code>./start-favoris-api.sh</code></small>
+        </div>
+    {% endif %}
+
+    {% for flash_message in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ flash_message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+
+    {% if api_disponible %}
+        {% if favoris is empty %}
+            <div class="text-center py-5">
+                <h3 class="text-muted">Aucun favori pour le moment</h3>
+                <p class="text-muted">Commencez à ajouter des produits à vos favoris !</p>
+                <a href="{{ path('app_blog_index') }}" class="btn btn-primary">Parcourir les produits</a>
+            </div>
+        {% else %}
+            <div class="row">
+                {% for favori in favoris %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Favori #{{ favori.id }}</h5>
+                                <p class="card-text">
+                                    <strong>Utilisateur:</strong> {{ favori.utilisateurId }}<br>
+                                    <strong>Produit:</strong> {{ favori.produitId }}
+                                </p>
+                                <button class="btn btn-danger btn-sm" 
+                                        onclick="supprimerFavori({{ favori.produitId }})">
+                                    🗑️ Supprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+
+<script>
+async function supprimerFavori(produitId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce favori ?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`{{ path('app_favoris_supprimer', {'produitId': 'PRODUIT_ID'}) }}`.replace('PRODUIT_ID', produitId), {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            // Recharger la page pour mettre à jour la liste
+            location.reload();
+        } else {
+            alert('Erreur : ' + data.message);
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur de communication avec le serveur');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+ 
+{% block title %}Liste des articles
+{% endblock %}
+{% block header %}
+	<header class="bg-white shadow p-4">
+		<h1 class="text-3xl font-bold text-center">Mon blog d’articles</h1>
+	</header>
+{% endblock %}
+{% block body %}
+	<main class="max-w-2xl mx-auto py-8">
+		{% if articles is empty %}
+			<section class="text-center text-gray-500">
+				<p>Aucun article disponible.</p>
+			</section>
+		{% else %}
+			<section aria-labelledby="articles-heading">
+				<h2 id="articles-heading" class="text-xl font-semibold mb-4 sr-only">Liste des articles</h2>
+ 
+				{% for article in articles %}
+					<article class="bg-white shadow p-4 rounded-lg mb-4" aria-labelledby="title-{{ article.id }}">
+						<header>
+							<h3 id="title-{{ article.id }}" class="text-xl font-bold">{{ article.title }}</h3>
+						</header>
+						<p class="mt-2 text-gray-700">
+							{{ article.content }}
+						</p>
+					</article>
+				{% endfor %}
+			</section>
+		{% endif %}
+	</main>
+{% endblock %}
+{% block footer %}
+	<footer class="text-center text-sm text-gray-500 py-4">
+		©
+		{{ "now"|date("Y") }}
+		Mon super blog en Symfony + Jakarta EE
+	</footer>
+{% endblock %}

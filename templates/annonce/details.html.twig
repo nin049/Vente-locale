@@ -1,0 +1,385 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ produit.nom }} - Détails{% endblock %}
+
+{% block body %}
+<div class="container mx-auto p-4">
+    <div class="mb-4">
+        <a href="{{ path('app_annonces') }}" class="text-blue-500 hover:text-blue-700 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Retour aux annonces
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="lg:flex">
+            <!-- Galerie d'images -->
+            <div class="lg:w-1/2">
+                {% if produit.images is not empty %}
+                    <div class="relative">
+                        <!-- Image principale -->
+                        <div class="aspect-square bg-gray-200">
+                            <img id="main-image" 
+                                 src="/uploads/images/{{ produit.images[0] }}" 
+                                 alt="{{ produit.nom }}" 
+                                 class="w-full h-full object-cover">
+                        </div>
+                        
+                        <!-- Miniatures -->
+                        {% if produit.images|length > 1 %}
+                            <div class="flex space-x-2 mt-4 p-4">
+                                {% for image in produit.images %}
+                                    <img src="/uploads/images/{{ image }}" 
+                                         alt="{{ produit.nom }}" 
+                                         class="w-20 h-20 object-cover rounded cursor-pointer hover:opacity-80 border-2 {% if loop.first %}border-blue-500{% else %}border-gray-200{% endif %}"
+                                         onclick="changeMainImage('/uploads/images/{{ image }}', this)">
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="aspect-square bg-gray-200 flex items-center justify-center">
+                        <svg class="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Informations -->
+            <div class="lg:w-1/2 p-8">
+                <div class="flex justify-between items-start mb-4">
+                    <h1 class="text-3xl font-bold text-gray-900">{{ produit.nom }}</h1>
+                    {% if produit.etat %}
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                            {{ produit.etat.libelle }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <p class="text-4xl font-bold text-blue-600 mb-6">{{ produit.prixInitial|number_format(2, ',', ' ') }} €</p>
+
+                <!-- Statistiques de l'annonce -->
+                {% if api_favoris_disponible() %}
+                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                    <h3 class="text-sm font-medium text-gray-600 mb-2">Popularité</h3>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center text-red-500">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
+                            </svg>
+                            <span id="nombre-favoris" class="font-semibold">{{ nombre_favoris(produit.id) }}</span>
+                            <span class="text-gray-600 ml-1">{{ nombre_favoris(produit.id) > 1 ? 'likes' : 'like' }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Informations générales</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Libellé:</span>
+                                <span class="font-medium">{{ produit.libelle }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if produit.produitCategories is not empty %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">Catégories</h3>
+                            <div class="flex flex-wrap gap-2">
+                                {% for produitCategorie in produit.produitCategories %}
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                        {{ produitCategorie.categorie.libelle }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Description</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-gray-700 leading-relaxed">{{ produit.description|nl2br }}</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-6">
+                        {% if proprietaire %}
+                            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                                <h4 class="font-semibold text-gray-900 mb-2">Vendeur</h4>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-semibold">
+                                            {{ proprietaire.prenom|first|upper }}{{ proprietaire.nom|first|upper }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">{{ proprietaire.prenom }} {{ proprietaire.nom }}</p>
+                                        <p class="text-sm text-gray-500">Vendeur vérifié</p>
+                                        {% if proprietaire.adresse %}
+                                            <p class="text-sm text-gray-500 flex items-center mt-1">
+                                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                                {{ proprietaire.adresse.ville }} ({{ proprietaire.adresse.codePostal }})
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if app.user and proprietaire and app.user == proprietaire %}
+                            <!-- Actions pour le propriétaire -->
+                            <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                                <h4 class="font-semibold text-blue-900 mb-3">Gestion de votre annonce</h4>
+                                <div class="flex space-x-3">
+                                    <a href="{{ path('app_annonce_modifier', {'id': produit.id}) }}" 
+                                       class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center">
+                                        <i class="fas fa-edit mr-2"></i>Modifier
+                                    </a>
+                                    
+                                    <button type="button" 
+                                            class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center"
+                                            onclick="confirmDelete({{ produit.id }})">
+                                        <i class="fas fa-trash mr-2"></i>Supprimer
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="flex space-x-4">
+                            <button class="flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
+                                Contacter le vendeur
+                            </button>
+                            
+                            {% if app.user and api_favoris_disponible() %}
+                                <button class="favori-btn-large py-3 px-6 rounded-lg font-bold transition-all duration-300 flex items-center justify-center {% if is_favori(produit.id) %}bg-red-500 text-white hover:bg-red-600{% else %}bg-gray-200 text-gray-700 hover:bg-red-500 hover:text-white{% endif %}"
+                                        data-produit-id="{{ produit.id }}"
+                                        onclick="toggleFavoriLarge({{ produit.id }}, this)"
+                                        title="{% if is_favori(produit.id) %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}">
+                                    <svg class="w-5 h-5 mr-2" fill="{% if is_favori(produit.id) %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                    </svg>
+                                    <span class="favori-text">{% if is_favori(produit.id) %}En favoris{% else %}Ajouter aux favoris{% endif %}</span>
+                                </button>
+                            {% else %}
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
+                                    </svg>
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <p class="text-sm text-yellow-800">
+                            <strong>Référence:</strong> #{{ produit.id }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Container pour les notifications -->
+<div id="notification-container" class="fixed top-4 right-4 z-50"></div>
+
+<!-- Formulaire de suppression caché -->
+{% if app.user and proprietaire and app.user == proprietaire %}
+    <form id="deleteForm" action="{{ path('app_annonce_supprimer', {'id': produit.id}) }}" method="post" style="display: none;">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete-annonce-' ~ produit.id) }}">
+    </form>
+{% endif %}
+
+<script>
+function changeMainImage(imageSrc, thumbnailElement) {
+    // Changer l'image principale
+    document.getElementById('main-image').src = imageSrc;
+    
+    // Gérer les bordures des miniatures
+    document.querySelectorAll('.lg\\:w-1\\/2 img').forEach(img => {
+        if (img !== document.getElementById('main-image')) {
+            img.classList.remove('border-blue-500');
+            img.classList.add('border-gray-200');
+        }
+    });
+    
+    thumbnailElement.classList.remove('border-gray-200');
+    thumbnailElement.classList.add('border-blue-500');
+}
+
+function confirmDelete(produitId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.')) {
+        if (confirm('Confirmez-vous vraiment la suppression ? Toutes les données de l\'annonce seront perdues.')) {
+            document.getElementById('deleteForm').submit();
+        }
+    }
+}
+
+// Fonction pour afficher une notification
+function showNotification(message, type = 'success') {
+    const container = document.getElementById('notification-container');
+    const notification = document.createElement('div');
+    
+    const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+    const icon = type === 'success' ? '✓' : '✗';
+    
+    notification.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg mb-2 transform translate-x-full transition-transform duration-300 flex items-center`;
+    notification.innerHTML = `
+        <span class="mr-2 font-bold text-lg">${icon}</span>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(notification);
+    
+    // Animation d'entrée
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Animation de sortie et suppression
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Fonction pour basculer un favori (version large pour la page de détails)
+async function toggleFavoriLarge(produitId, buttonElement) {
+    // Animation de chargement
+    buttonElement.disabled = true;
+    buttonElement.style.transform = 'scale(0.95)';
+    
+    const textElement = buttonElement.querySelector('.favori-text');
+    const originalText = textElement.textContent;
+    textElement.textContent = 'Chargement...';
+    
+    try {
+        const response = await fetch(`/favoris/toggle/${produitId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            // Mettre à jour l'apparence du bouton
+            updateFavoriteButtonLarge(buttonElement, data.est_favori);
+            
+            // Mettre à jour le compteur de favoris
+            await updateFavorisCount(produitId, data.est_favori);
+            
+            // Afficher notification de succès avec animation spéciale
+            const message = data.est_favori ? 
+                '❤️ Produit ajouté à vos favoris !' : 
+                '💔 Produit retiré de vos favoris';
+            showNotification(message, 'success');
+            
+            // Animation de succès plus prononcée
+            buttonElement.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                buttonElement.style.transform = 'scale(1)';
+            }, 300);
+            
+            // Animation du cœur
+            const svg = buttonElement.querySelector('svg');
+            svg.style.transform = 'scale(1.3)';
+            setTimeout(() => {
+                svg.style.transform = 'scale(1)';
+            }, 300);
+        } else {
+            showNotification(data.message || 'Erreur lors de l\'opération', 'error');
+            textElement.textContent = originalText;
+            console.error('Erreur:', data.message);
+        }
+    } catch (error) {
+        showNotification('Erreur de communication avec le serveur', 'error');
+        textElement.textContent = originalText;
+        console.error('Erreur réseau:', error);
+    } finally {
+        buttonElement.disabled = false;
+    }
+}
+
+// Fonction pour mettre à jour l'apparence du bouton favori (version large)
+function updateFavoriteButtonLarge(button, isFavorite) {
+    const svg = button.querySelector('svg');
+    const textElement = button.querySelector('.favori-text');
+    
+    if (isFavorite) {
+        button.className = 'favori-btn-large py-3 px-6 rounded-lg font-bold transition-all duration-300 flex items-center justify-center bg-red-500 text-white hover:bg-red-600';
+        svg.setAttribute('fill', 'currentColor');
+        textElement.textContent = 'En favoris';
+        button.title = 'Retirer des favoris';
+    } else {
+        button.className = 'favori-btn-large py-3 px-6 rounded-lg font-bold transition-all duration-300 flex items-center justify-center bg-gray-200 text-gray-700 hover:bg-red-500 hover:text-white';
+        svg.setAttribute('fill', 'none');
+        textElement.textContent = 'Ajouter aux favoris';
+        button.title = 'Ajouter aux favoris';
+    }
+}
+
+// Fonction pour mettre à jour le compteur de favoris
+async function updateFavorisCount(produitId, wasAdded) {
+    const compteurElement = document.getElementById('nombre-favoris');
+    if (!compteurElement) return;
+    
+    try {
+        // Récupérer le nouveau nombre de favoris depuis l'API
+        const response = await fetch(`/api/favoris/count/${produitId}`);
+        if (response.ok) {
+            const data = await response.json();
+            const newCount = data.count || 0;
+            
+            // Animation du compteur
+            compteurElement.style.transform = 'scale(1.2)';
+            compteurElement.style.color = '#ef4444'; // Rouge
+            
+            setTimeout(() => {
+                compteurElement.textContent = newCount;
+                
+                // Mettre à jour le texte "like" ou "likes"
+                const textElement = compteurElement.nextElementSibling;
+                if (textElement) {
+                    textElement.textContent = newCount > 1 ? 'likes' : 'like';
+                }
+                
+                setTimeout(() => {
+                    compteurElement.style.transform = 'scale(1)';
+                    compteurElement.style.color = '';
+                }, 200);
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du compteur:', error);
+        // Fallback: mise à jour manuelle basée sur l'action
+        const currentCount = parseInt(compteurElement.textContent) || 0;
+        const newCount = wasAdded ? currentCount + 1 : Math.max(0, currentCount - 1);
+        
+        compteurElement.style.transform = 'scale(1.2)';
+        setTimeout(() => {
+            compteurElement.textContent = newCount;
+            const textElement = compteurElement.nextElementSibling;
+            if (textElement) {
+                textElement.textContent = newCount > 1 ? 'likes' : 'like';
+            }
+            compteurElement.style.transform = 'scale(1)';
+        }, 100);
+    }
+}
+</script>
+{% endblock %}

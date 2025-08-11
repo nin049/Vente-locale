@@ -1,0 +1,151 @@
+<!-- Popup de sélection des catégories -->
+<div class="categories-popup-overlay" id="categories-popup-overlay">
+    <div class="categories-popup">
+        <div class="categories-popup-header">
+            <h3>Choisir une catégorie</h3>
+            <button type="button" class="categories-popup-close" id="categories-popup-close">&times;</button>
+        </div>
+        
+        <div class="categories-popup-body">
+            <!-- Électronique & High-Tech -->
+            <div class="categories-group">
+                <div class="categories-group-header" data-group="electronique">
+                    <span>📱 Électronique & High-Tech</span>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="categories-group-content" data-group-content="electronique">
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-telephones" data-category="Téléphones & Smartphones">
+                        <label for="cat-telephones">Téléphones & Smartphones</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-ordinateurs" data-category="Ordinateurs & Tablettes">
+                        <label for="cat-ordinateurs">Ordinateurs & Tablettes</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-tv" data-category="TV & Audio-Vidéo">
+                        <label for="cat-tv">TV & Audio-Vidéo</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-jeux" data-category="Jeux vidéo & Consoles">
+                        <label for="cat-jeux">Jeux vidéo & Consoles</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Véhicules -->
+            <div class="categories-group">
+                <div class="categories-group-header" data-group="vehicules">
+                    <span>🚗 Véhicules</span>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="categories-group-content" data-group-content="vehicules">
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-voitures" data-category="Voitures">
+                        <label for="cat-voitures">Voitures</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-motos" data-category="Motos & Scooters">
+                        <label for="cat-motos">Motos & Scooters</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-velos" data-category="Vélos">
+                        <label for="cat-velos">Vélos</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maison & Jardin -->
+            <div class="categories-group">
+                <div class="categories-group-header" data-group="maison">
+                    <span>🏠 Maison & Jardin</span>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="categories-group-content" data-group-content="maison">
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-meubles" data-category="Meubles">
+                        <label for="cat-meubles">Meubles</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-electromenager" data-category="Électroménager">
+                        <label for="cat-electromenager">Électroménager</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-decoration" data-category="Décoration">
+                        <label for="cat-decoration">Décoration</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mode & Beauté -->
+            <div class="categories-group">
+                <div class="categories-group-header" data-group="mode">
+                    <span>👕 Mode & Beauté</span>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="categories-group-content" data-group-content="mode">
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-vetements-femme" data-category="Vêtements femme">
+                        <label for="cat-vetements-femme">Vêtements femme</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-vetements-homme" data-category="Vêtements homme">
+                        <label for="cat-vetements-homme">Vêtements homme</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-chaussures" data-category="Chaussures">
+                        <label for="cat-chaussures">Chaussures</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sport & Loisirs -->
+            <div class="categories-group">
+                <div class="categories-group-header" data-group="sport">
+                    <span>⚽ Sport & Loisirs</span>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="categories-group-content" data-group-content="sport">
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-equipements-sportifs" data-category="Équipements sportifs">
+                        <label for="cat-equipements-sportifs">Équipements sportifs</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-instruments" data-category="Instruments de musique">
+                        <label for="cat-instruments">Instruments de musique</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-livres" data-category="Livres & BD">
+                        <label for="cat-livres">Livres & BD</label>
+                    </div>
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-jouets" data-category="Jouets & Jeux">
+                        <label for="cat-jouets">Jouets & Jeux</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Animaux -->
+            <div class="categories-group">
+                <div class="categories-group-header" data-group="animaux">
+                    <span>🐕 Animaux</span>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="categories-group-content" data-group-content="animaux">
+                    <div class="category-item">
+                        <input type="checkbox" id="cat-accessoires-animaux" data-category="Accessoires animaux">
+                        <label for="cat-accessoires-animaux">Accessoires animaux</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="categories-popup-footer">
+            <div class="selected-count" id="selected-count">Aucune catégorie sélectionnée</div>
+            <div class="categories-popup-actions">
+                <button type="button" class="btn-popup btn-popup-secondary" id="categories-cancel">Annuler</button>
+                <button type="button" class="btn-popup btn-popup-primary" id="categories-confirm">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>

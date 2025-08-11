@@ -1,0 +1,51 @@
+@FavorisApi_HostAddress = https://localhost:7138
+
+### Récupérer tous les favoris
+GET {{FavorisApi_HostAddress}}/api/favoris
+Accept: application/json
+
+###
+
+### Récupérer les favoris d'un utilisateur spécifique
+GET {{FavorisApi_HostAddress}}/api/favoris/user/1
+Accept: application/json
+
+###
+
+### Récupérer un favori par ID
+GET {{FavorisApi_HostAddress}}/api/favoris/1
+Accept: application/json
+
+###
+
+### Créer un nouveau favori
+POST {{FavorisApi_HostAddress}}/api/favoris
+Content-Type: application/json
+
+{
+  "utilisateurId": 1,
+  "produitId": 1
+}
+
+###
+
+### Vérifier si un favori existe
+GET {{FavorisApi_HostAddress}}/api/favoris/exists/user/1/product/1
+Accept: application/json
+
+###
+
+### Supprimer un favori par ID
+DELETE {{FavorisApi_HostAddress}}/api/favoris/1
+
+###
+
+### Supprimer un favori par utilisateur et produit
+DELETE {{FavorisApi_HostAddress}}/api/favoris/user/1/product/1
+
+###isApi_HostAddress = http://localhost:5291
+
+GET {{FavorisApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

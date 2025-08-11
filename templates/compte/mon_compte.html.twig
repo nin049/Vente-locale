@@ -1,0 +1,313 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon Compte{% endblock %}
+
+{% block body %}
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Mon Compte</h1>
+
+    <!-- Messages flash -->
+    {% for label, messages in app.flashes %}
+        <div class="alert alert-{{ label }} mb-4 p-4 rounded-lg {% if label == 'success' %}bg-green-100 text-green-700 border border-green-200{% elseif label == 'error' %}bg-red-100 text-red-700 border border-red-200{% endif %}">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endfor %}
+
+    <!-- Mise en page en deux colonnes -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Colonne de gauche : Informations du compte -->
+        <div class="lg:col-span-1">
+            <div class="bg-white shadow-lg rounded-lg p-6 space-y-6">
+                <!-- Informations personnelles -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Informations personnelles</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <span class="font-medium text-gray-600">Nom :</span>
+                            <span class="text-gray-800">{{ user.nom }}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-600">Prénom :</span>
+                            <span class="text-gray-800">{{ user.prenom }}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-600">Email :</span>
+                            <span class="text-gray-800">{{ user.email }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rôles -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Rôles</h2>
+                    <div class="space-y-2">
+                        {% for possede in user.possedes %}
+                            <span class="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                                {{ possede.role.nom }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Adresse -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">Mon adresse</h2>
+                        <a href="{{ path('app_compte_adresse') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            {% if user.adresse %}
+                                <i class="fas fa-edit mr-1"></i>Modifier
+                            {% else %}
+                                <i class="fas fa-plus mr-1"></i>Ajouter
+                            {% endif %}
+                        </a>
+                    </div>
+                    {% if user.adresse %}
+                        <div class="text-gray-700">
+                            <div class="flex items-start space-x-2 mb-2">
+                                <i class="fas fa-map-marker-alt text-gray-400 mt-1"></i>
+                                <div>
+                                    <p class="font-medium">{{ user.adresse.rue }}</p>
+                                    <p class="text-sm text-gray-500">{{ user.adresse.codePostal }} {{ user.adresse.ville }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-gray-500 text-center py-4">
+                            <i class="fas fa-map-marker-alt text-3xl mb-2"></i>
+                            <p class="text-sm">Aucune adresse enregistrée</p>
+                            <a href="{{ path('app_compte_adresse') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Ajouter mon adresse
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Actions -->
+                <div class="space-y-2">
+                    <a href="{{ path('app_compte_modifier') }}" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 text-center block">
+                        <i class="fas fa-edit mr-2"></i>Modifier mes informations
+                    </a>
+
+                    <a href="{{ path('app_compte_adresse') }}" class="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 text-center block">
+                        <i class="fas fa-map-marker-alt mr-2"></i>
+                        {% if user.adresse %}Gérer mon adresse{% else %}Ajouter mon adresse{% endif %}
+                    </a>
+                    
+                    <button type="button" class="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200" onclick="confirmDelete()">
+                        <i class="fas fa-trash mr-2"></i>Supprimer mon compte
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Colonne de droite : Mes Annonces -->
+        <div class="lg:col-span-3">
+            <div class="bg-white shadow-lg rounded-lg p-6">
+                <!-- Mes Annonces -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-semibold text-gray-800">
+                            Mes Annonces
+                            {% if appartients|length > 0 %}
+                                <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-2">
+                                    {{ appartients|length }}
+                                </span>
+                            {% endif %}
+                        </h2>
+                        {% if appartients|length > 0 %}
+                            <a href="{{ path('app_annonce_creer') }}" 
+                               class="bg-green-500 hover:bg-green-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition duration-200">
+                                <i class="fas fa-plus mr-1"></i>Nouvelle annonce
+                            </a>
+                        {% endif %}
+                    </div>
+                    
+                    {% if appartients|length > 0 %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {% for appartient in appartients %}
+                                {% set produit = appartient.produit %}
+                                <div class="bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-200">
+                                    <!-- Image du produit -->
+                                    <div class="aspect-w-16 aspect-h-9 h-48 bg-gray-200">
+                                        {% if produit.images|length > 0 %}
+                                            {% set firstImage = produit.images|first %}
+                                            <img src="{{ asset('uploads/images/' ~ firstImage) }}" 
+                                                 alt="{{ produit.nom }}" 
+                                                 class="w-full h-full object-cover">
+                                        {% else %}
+                                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                                <i class="fas fa-image text-4xl"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Contenu de l'annonce -->
+                                    <div class="p-4">
+                                        <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ produit.nom }}</h3>
+                                        <p class="text-sm text-gray-600 mb-2">{{ produit.libelle }}</p>
+                                        
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-lg font-bold text-green-600">{{ produit.prixInitial }}€</span>
+                                        </div>
+                                        
+                                        <div class="text-sm text-gray-500 mb-3">
+                                            <i class="fas fa-calendar-alt mr-1"></i>
+                                            Créée le {{ appartient.dateAjout|date('d/m/Y') }}
+                                        </div>
+                                        
+                                        <!-- Catégories -->
+                                        {% if produit.produitCategories|length > 0 %}
+                                            <div class="flex flex-wrap gap-1 mb-3">
+                                                {% for produitCategorie in produit.produitCategories|slice(0, 2) %}
+                                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                                        {{ produitCategorie.categorie.libelle }}
+                                                    </span>
+                                                {% endfor %}
+                                                {% if produit.produitCategories|length > 2 %}
+                                                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                                                        +{{ produit.produitCategories|length - 2 }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <!-- Actions -->
+                                        <div class="flex gap-2">
+                                            <a href="{{ path('app_annonce_details', {'id': produit.id}) }}" 
+                                               class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2 px-3 rounded text-center transition duration-200">
+                                                <i class="fas fa-eye mr-1"></i>Voir
+                                            </a>
+                                            <a href="{{ path('app_annonce_modifier', {'id': produit.id}) }}" 
+                                               class="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium py-2 px-3 rounded transition duration-200" 
+                                               title="Modifier l'annonce">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="bg-red-500 hover:bg-red-600 text-white text-sm font-medium py-2 px-3 rounded transition duration-200" 
+                                                    title="Supprimer l'annonce"
+                                                    onclick="confirmDeleteAnnonce({{ produit.id }}, '{{ produit.nom|e('js') }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8 bg-gray-50 rounded-lg">
+                            <i class="fas fa-box-open text-4xl text-gray-400 mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-600 mb-2">Aucune annonce créée</h3>
+                            <p class="text-gray-500 mb-4">Vous n'avez pas encore créé d'annonce.</p>
+                            <a href="{{ path('app_annonce_creer') }}" 
+                               class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-lg transition duration-200 inline-block">
+                                <i class="fas fa-plus mr-2"></i>Créer ma première annonce
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Mes Avis (front uniquement) -->
+                <div class="border-t border-gray-200 pt-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-semibold text-gray-800">
+                            Mes Avis
+                            {% set avisList = avis|default([]) %}
+                            {% if avisList|length > 0 %}
+                                <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-2">
+                                    {{ avisList|length }}
+                                </span>
+                            {% endif %}
+                        </h2>
+                    </div>
+
+                    {% if avisList|length > 0 %}
+                        <div class="space-y-4">
+                            {% for avisItem in avisList %}
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex text-yellow-400">
+                                                    {% for i in 1..5 %}
+                                                        {% if i <= (avisItem.note|default(0)) %}
+                                                            <i class="fas fa-star"></i>
+                                                        {% else %}
+                                                            <i class="far fa-star text-gray-300"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                                <span class="text-sm text-gray-500">
+                                                    {{ (avisItem.note|default(0)) }}/5
+                                                </span>
+                                            </div>
+                                            <p class="text-gray-700 mt-2">
+                                                {{ avisItem.commentaire|default('') }}
+                                            </p>
+                                            <div class="mt-2 text-sm text-gray-500">
+                                                {% if avisItem.auteur is defined and avisItem.auteur %}
+                                                    <span>par {{ avisItem.auteur.prenom|default('') }} {{ avisItem.auteur.nom|default('') }}</span>
+                                                {% endif %}
+                                                {% if avisItem.produit is defined and avisItem.produit %}
+                                                    <span class="mx-1">•</span>
+                                                    <a href="{{ path('app_annonce_details', {'id': avisItem.produit.id}) }}" class="text-blue-600 hover:text-blue-800">
+                                                        sur {{ avisItem.produit.nom|default('') }}
+                                                    </a>
+                                                {% endif %}
+                                                {% if avisItem.createdAt is defined and avisItem.createdAt %}
+                                                    <span class="mx-1">•</span>
+                                                    <span>le {{ avisItem.createdAt|date('d/m/Y') }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8 bg-gray-50 rounded-lg">
+                            <i class="fas fa-star text-4xl text-gray-400 mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-600 mb-2">Aucun avis pour le moment</h3>
+                            <p class="text-gray-500">Quand vous recevrez des avis sur vos annonces, ils s’afficheront ici.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de suppression du compte -->
+        <form id="deleteForm" action="{{ path('app_compte_supprimer') }}" method="post" style="display: none;">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete-account') }}">
+        </form>
+
+        <!-- Formulaires de suppression des annonces -->
+        {% if appartients|length > 0 %}
+            {% for appartient in appartients %}
+                {% set produit = appartient.produit %}
+                <form id="deleteAnnonceForm{{ produit.id }}" action="{{ path('app_annonce_supprimer', {'id': produit.id}) }}" method="post" style="display: none;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete-annonce-' ~ produit.id) }}">
+                </form>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function confirmDelete() {
+    if (confirm('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.')) {
+        if (confirm('Confirmez-vous vraiment la suppression de votre compte ? Toutes vos données seront perdues.')) {
+            document.getElementById('deleteForm').submit();
+        }
+    }
+}
+
+function confirmDeleteAnnonce(produitId, produitNom) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer l'annonce "${produitNom}" ? Cette action est irréversible.`)) {
+        if (confirm('Confirmez-vous vraiment la suppression ? L\'annonce sera définitivement supprimée.')) {
+            document.getElementById('deleteAnnonceForm' + produitId).submit();
+        }
+    }
+}
+</script>
+{% endblock %}

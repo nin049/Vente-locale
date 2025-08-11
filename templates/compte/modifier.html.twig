@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier mon compte{% endblock %}
+
+{% block body %}
+<div class="container mx-auto p-4 max-w-2xl">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Modifier mes informations</h1>
+
+        <!-- Messages flash -->
+        {% for label, messages in app.flashes %}
+            <div class="alert alert-{{ label }} mb-4 p-4 rounded-lg {% if label == 'success' %}bg-green-100 text-green-700 border border-green-200{% elseif label == 'error' %}bg-red-100 text-red-700 border border-red-200{% endif %}">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+
+        <!-- Affichage des erreurs générales du formulaire -->
+        {% if not form.vars.valid %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <strong>Erreurs dans le formulaire :</strong>
+                {{ form_errors(form) }}
+            </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                {{ form_label(form.nom, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+                {{ form_widget(form.nom, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'}}) }}
+                {% if form.nom.vars.errors|length > 0 %}
+                    <div class="text-red-600 text-sm mt-1">{{ form_errors(form.nom) }}</div>
+                {% endif %}
+            </div>
+
+            <div>
+                {{ form_label(form.prenom, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+                {{ form_widget(form.prenom, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'}}) }}
+                {% if form.prenom.vars.errors|length > 0 %}
+                    <div class="text-red-600 text-sm mt-1">{{ form_errors(form.prenom) }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            {{ form_label(form.email, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+            {{ form_widget(form.email, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'}}) }}
+            {% if form.email.vars.errors|length > 0 %}
+                <div class="text-red-600 text-sm mt-1">{{ form_errors(form.email) }}</div>
+            {% endif %}
+        </div>
+
+        <div class="border-t pt-4">
+            <h3 class="text-lg font-medium text-gray-800 mb-3">Changer le mot de passe</h3>
+            <p class="text-sm text-gray-600 mb-4">Laissez vide si vous ne voulez pas changer votre mot de passe.</p>
+            
+            <div>
+                {{ form_label(form.plainPassword.first, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+                {{ form_widget(form.plainPassword.first, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'}}) }}
+                {% if form.plainPassword.first.vars.errors|length > 0 %}
+                    <div class="text-red-600 text-sm mt-1">{{ form_errors(form.plainPassword.first) }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mt-3">
+                {{ form_label(form.plainPassword.second, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-1'}}) }}
+                {{ form_widget(form.plainPassword.second, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'}}) }}
+                {% if form.plainPassword.second.vars.errors|length > 0 %}
+                    <div class="text-red-600 text-sm mt-1">{{ form_errors(form.plainPassword.second) }}</div>
+                {% endif %}
+                {% if form.plainPassword.vars.errors|length > 0 %}
+                    <div class="text-red-600 text-sm mt-1">{{ form_errors(form.plainPassword) }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 pt-4">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition duration-200">
+                <i class="fas fa-save mr-2"></i>Enregistrer les modifications
+            </button>
+            
+            <a href="{{ path('app_mon_compte') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-6 rounded-lg transition duration-200 text-center">
+                <i class="fas fa-times mr-2"></i>Annuler
+            </a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

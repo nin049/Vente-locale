@@ -1,0 +1,423 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier l'annonce{% endblock %}
+
+{% block body %}
+<div class="container mx-auto p-4">
+    <div class="mb-4">
+        <a href="{{ path('app_annonce_details', {'id': produit.id}) }}" class="text-blue-600 hover:text-blue-800 inline-flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i>Retour à l'annonce
+        </a>
+    </div>
+
+    <h1 class="text-2xl font-bold mb-4">Modifier l'annonce : {{ produit.nom }}</h1>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        {{ form_start(form, {'attr': {'enctype': 'multipart/form-data', 'data-turbo': 'false'}}) }}
+        
+        <div class="mb-4">
+            {{ form_label(form.nom, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}}) }}
+            {{ form_widget(form.nom) }}
+            {{ form_errors(form.nom) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.libelle, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}}) }}
+            {{ form_widget(form.libelle) }}
+            {{ form_errors(form.libelle) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.prixInitial, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}}) }}
+            {{ form_widget(form.prixInitial) }}
+            {{ form_errors(form.prixInitial) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.categories, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}}) }}
+            
+            <!-- Interface de sélection des catégories -->
+            <div class="categories-selector">
+                <button type="button" class="categories-selector-button" id="categories-selector-btn">
+                    <span id="categories-placeholder">Choisir une catégorie...</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                
+                <!-- Affichage de la catégorie sélectionnée -->
+                <div class="categories-selected-display" id="categories-selected-display"></div>
+            </div>
+            
+            <!-- Champ caché pour Symfony -->
+            {{ form_widget(form.categories, {'attr': {'class': 'hidden-categories-select'}}) }}
+            {{ form_errors(form.categories) }}
+        </div>
+
+        <div class="mb-4">
+            {{ form_label(form.etat, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}}) }}
+            {{ form_widget(form.etat) }}
+            {{ form_errors(form.etat) }}
+        </div>
+
+        <!-- Images actuelles -->
+        {% if produit.images|length > 0 %}
+            <div class="mb-4">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Images actuelles</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                    {% for image in produit.images %}
+                        <div class="relative">
+                            <img src="{{ asset('uploads/images/' ~ image) }}" 
+                                 alt="Image de {{ produit.nom }}" 
+                                 class="w-full h-32 object-cover rounded-lg shadow-md">
+                        </div>
+                    {% endfor %}
+                </div>
+                <p class="text-sm text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Si vous téléchargez de nouvelles images, elles remplaceront celles-ci.
+                </p>
+            </div>
+        {% endif %}
+
+        <div class="mb-4">
+            {{ form_label(form.images, 'Nouvelles images (optionnel)', {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}}) }}
+            {{ form_widget(form.images, {'attr': {'id': 'images-input', 'accept': '.jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp'}}) }}
+            {{ form_errors(form.images) }}
+            <p class="mt-2 text-sm text-gray-500">
+                <span class="font-medium">Formats acceptés:</span> JPEG, PNG, GIF, WEBP (max 5MB par image, 3 images maximum)
+            </p>
+            <div id="image-count" class="mt-2 text-sm text-blue-600 font-medium"></div>
+        </div>
+
+        <script>
+        // Support Turbo Drive: exécuter à DOMContentLoaded et turbo:load
+        const initImageCount = function() {
+            const imageInput = document.getElementById('images-input');
+            const imageCount = document.getElementById('image-count');
+            if (!imageInput || !imageCount) return;
+            const maxImages = 3;
+            const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
+            function updateImageCount() {
+                const files = Array.from(imageInput.files);
+                let validFiles = 0;
+                let errors = [];
+                
+                files.forEach((file, index) => {
+                    // Vérifier le type de fichier
+                    if (!allowedTypes.includes(file.type.toLowerCase())) {
+                        errors.push(`"${file.name}" : format non supporté`);
+                        return;
+                    }
+                    
+                    // Vérifier la taille
+                    if (file.size > maxSizeBytes) {
+                        errors.push(`"${file.name}" : trop volumineux (max 5MB)`);
+                        return;
+                    }
+                    
+                    validFiles++;
+                });
+                
+                if (files.length > 0) {
+                    if (errors.length > 0) {
+                        imageCount.innerHTML = `
+                            <div class="text-red-600">
+                                <strong>⚠️ Erreurs détectées :</strong><br>
+                                ${errors.join('<br>')}
+                            </div>
+                        `;
+                        imageCount.classList.add('text-red-600');
+                        imageCount.classList.remove('text-blue-600');
+                    } else if (validFiles > maxImages) {
+                        imageCount.textContent = `⚠️ Trop d'images sélectionnées ! Maximum ${maxImages} autorisées.`;
+                        imageCount.classList.add('text-red-600');
+                        imageCount.classList.remove('text-blue-600');
+                    } else {
+                        imageCount.textContent = `${validFiles} nouvelle(s) image(s) valide(s) sélectionnée(s) (max ${maxImages})`;
+                        imageCount.classList.add('text-blue-600');
+                        imageCount.classList.remove('text-red-600');
+                    }
+                } else {
+                    imageCount.textContent = '';
+                }
+            }
+
+            // Validation avant soumission du formulaire
+            const form = imageInput.closest('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const files = Array.from(imageInput.files);
+                    let hasErrors = false;
+                    
+                    if (files.length > maxImages) {
+                        e.preventDefault();
+                        alert(`Vous ne pouvez sélectionner que ${maxImages} images maximum.`);
+                        hasErrors = true;
+                    }
+                    
+                    files.forEach(file => {
+                        if (!allowedTypes.includes(file.type.toLowerCase())) {
+                            e.preventDefault();
+                            alert(`Le fichier "${file.name}" n'est pas un format d'image supporté.`);
+                            hasErrors = true;
+                        }
+                        
+                        if (file.size > maxSizeBytes) {
+                            e.preventDefault();
+                            alert(`Le fichier "${file.name}" est trop volumineux (max 5MB).`);
+                            hasErrors = true;
+                        }
+                    });
+                    
+                    if (hasErrors) {
+                        return false;
+                    }
+                });
+            }
+
+            imageInput.addEventListener('change', updateImageCount);
+        };
+        document.addEventListener('DOMContentLoaded', initImageCount);
+        document.addEventListener('turbo:load', initImageCount);
+        </script>
+
+        <!-- Include popup template -->
+        {% include 'annonce/categories_popup.html.twig' %}
+
+        <script type="text/javascript">
+        // Gestionnaire de popup pour la sélection d'une seule catégorie
+        class CategorySelectorManager {
+            constructor() {
+                this.popup = null;
+                this.selectorBtn = null;
+                this.selectedCategory = null;
+                this.symfonySelect = null;
+                this.init();
+            }
+
+            init() {
+                this.setup();
+            }
+
+        setup() {
+            this.popup = document.getElementById('categories-popup-overlay');
+            this.selectorBtn = document.getElementById('categories-selector-btn');
+            // Chercher le select des catégories de manière plus spécifique
+            this.symfonySelect = document.querySelector('select.hidden-categories-select') || 
+                                document.querySelector('select[name*="categories"]') ||
+                                document.querySelector('select:not([multiple])');
+            
+            console.log('Select trouvé:', this.symfonySelect); // Debug
+            
+            if (!this.popup || !this.selectorBtn) {
+                console.log('Popup ou bouton non trouvé'); // Debug
+                return;
+            }
+
+            this.bindEvents();
+            
+            // Charger la catégorie pré-sélectionnée dès que possible
+            requestAnimationFrame(() => this.loadPreselectedCategory());
+        }            bindEvents() {
+                const closeBtn = document.getElementById('categories-popup-close');
+                const cancelBtn = document.getElementById('categories-cancel');
+                const confirmBtn = document.getElementById('categories-confirm');
+                const selectedDisplay = document.getElementById('categories-selected-display');
+
+                // Ouvrir la popup
+                this.selectorBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.openPopup();
+                });
+
+                // Fermer la popup
+                closeBtn?.addEventListener('click', () => this.closePopup());
+                cancelBtn?.addEventListener('click', () => this.closePopup());
+
+                // Fermer en cliquant sur l'overlay
+                this.popup.addEventListener('click', (e) => {
+                    if (e.target === this.popup) {
+                        this.closePopup();
+                    }
+                });
+
+                // Gestion des groupes repliables
+                document.querySelectorAll('.categories-group-header').forEach(header => {
+                    header.addEventListener('click', () => this.toggleGroup(header));
+                });
+
+                // Gestion des cases à cocher (radio behavior)
+                document.querySelectorAll('.categories-popup input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', () => this.handleCheckboxChange(checkbox));
+                });
+
+                // Confirmer la sélection
+                confirmBtn?.addEventListener('click', () => this.confirmSelection());
+
+                // Supprimer la catégorie depuis l'affichage
+                selectedDisplay?.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('remove')) {
+                        this.removeCategory();
+                    }
+                });
+
+                // Fermer avec Echap
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.popup.classList.contains('active')) {
+                        this.closePopup();
+                    }
+                });
+            }
+
+        loadPreselectedCategory() {
+            if (this.symfonySelect) {
+                const selectedValue = this.symfonySelect.value;
+                console.log('Valeur sélectionnée:', selectedValue); // Debug
+                console.log('Options disponibles:', Array.from(this.symfonySelect.options).map(opt => ({value: opt.value, text: opt.text}))); // Debug
+                
+                if (selectedValue) {
+                    // Trouver l'option sélectionnée
+                    const selectedOption = Array.from(this.symfonySelect.options).find(option => option.value === selectedValue);
+                    if (selectedOption && selectedOption.text) {
+                        this.selectedCategory = selectedOption.text;
+                        console.log('Catégorie trouvée:', this.selectedCategory); // Debug
+                        const checkbox = document.querySelector(`input[data-category="${selectedOption.text}"]`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            console.log('Checkbox cochée pour:', selectedOption.text); // Debug
+                        } else {
+                            console.log('Checkbox non trouvée pour:', selectedOption.text); // Debug
+                        }
+                        this.updateDisplay();
+                    }
+                }
+            } else {
+                console.log('Select Symfony non trouvé'); // Debug
+            }
+        }            openPopup() {
+                this.popup.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            closePopup() {
+                this.popup.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            toggleGroup(header) {
+                const groupContent = header.nextElementSibling;
+                const isCollapsed = header.classList.contains('collapsed');
+                
+                if (isCollapsed) {
+                    header.classList.remove('collapsed');
+                    groupContent.classList.remove('collapsed');
+                } else {
+                    header.classList.add('collapsed');
+                    groupContent.classList.add('collapsed');
+                }
+            }
+
+            handleCheckboxChange(checkbox) {
+                const category = checkbox.dataset.category;
+                
+                if (checkbox.checked) {
+                    // Décocher toutes les autres cases (comportement radio)
+                    document.querySelectorAll('.categories-popup input[type="checkbox"]').forEach(cb => {
+                        if (cb !== checkbox) {
+                            cb.checked = false;
+                        }
+                    });
+                    this.selectedCategory = category;
+                } else {
+                    this.selectedCategory = null;
+                }
+                
+                this.updateSelectedCount();
+            }
+
+            removeCategory() {
+                this.selectedCategory = null;
+                
+                // Décocher toutes les cases
+                document.querySelectorAll('.categories-popup input[type="checkbox"]').forEach(cb => {
+                    cb.checked = false;
+                });
+                
+                this.updateDisplay();
+                this.updateSymfonySelect();
+            }
+
+            confirmSelection() {
+                this.updateSymfonySelect();
+                this.updateDisplay();
+                this.closePopup();
+            }
+
+            updateSelectedCount() {
+                const count = this.selectedCategory ? 1 : 0;
+                const selectedCount = document.getElementById('selected-count');
+                if (selectedCount) {
+                    selectedCount.textContent = count > 0 ? `1 catégorie sélectionnée` : `Aucune catégorie sélectionnée`;
+                }
+            }
+
+            updateSymfonySelect() {
+                if (!this.symfonySelect) return;
+                
+                // Trouver l'option correspondante et la sélectionner
+                Array.from(this.symfonySelect.options).forEach(option => {
+                    option.selected = (option.text === this.selectedCategory);
+                });
+            }
+
+            updateDisplay() {
+                const placeholder = document.getElementById('categories-placeholder');
+                const selectedDisplay = document.getElementById('categories-selected-display');
+                
+                if (!placeholder || !selectedDisplay) return;
+
+                if (!this.selectedCategory) {
+                    placeholder.textContent = 'Choisir une catégorie...';
+                    selectedDisplay.innerHTML = '';
+                } else {
+                    placeholder.textContent = this.selectedCategory;
+                    
+                    selectedDisplay.innerHTML = `
+                        <div class="category-tag">
+                            ${this.selectedCategory}
+                            <span class="remove">&times;</span>
+                        </div>
+                    `;
+                }
+                this.updateSelectedCount();
+            }
+        }
+
+        // Créer une instance (support Turbo Drive)
+        const initCategorySelector = function() {
+            new CategorySelectorManager();
+        };
+        document.addEventListener('DOMContentLoaded', initCategorySelector);
+        document.addEventListener('turbo:load', initCategorySelector);
+        </script>
+
+        <div class="mb-4">
+            {{ form_label(form.description, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}}) }}
+            {{ form_widget(form.description) }}
+            {{ form_errors(form.description) }}
+        </div>
+
+        <div class="flex items-center justify-between">
+            {{ form_widget(form.submit, {'attr': {'class': 'bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'}, 'label': 'Modifier l\'annonce'}) }}
+            <a href="{{ path('app_annonce_details', {'id': produit.id}) }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded ml-4">
+                Annuler
+            </a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}
