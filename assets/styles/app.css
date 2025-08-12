@@ -1,5 +1,116 @@
 @import './categories-popup.css';
 
+/* Styles de base simples et modernes */
 body {
-    background-color: lightgray;
+    background-color: #f9fafb;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Navbar simple avec priorité sur Bootstrap */
+nav {
+    backdrop-filter: blur(10px);
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1050 !important;
+}
+
+/* IMPORTANT: Supprimer TOUS les soulignements dans la navbar */
+nav a {
+    text-decoration: none !important;
+    text-decoration-line: none !important;
+    text-underline-offset: unset !important;
+    border-bottom: none !important;
+}
+
+nav a:hover {
+    text-decoration: none !important;
+    text-decoration-line: none !important;
+    border-bottom: none !important;
+}
+
+nav a:focus {
+    text-decoration: none !important;
+    text-decoration-line: none !important;
+    border-bottom: none !important;
+}
+
+nav a:visited {
+    text-decoration: none !important;
+    text-decoration-line: none !important;
+    border-bottom: none !important;
+}
+
+nav a:active {
+    text-decoration: none !important;
+    text-decoration-line: none !important;
+    border-bottom: none !important;
+}
+
+/* Force les styles Tailwind pour la navbar */
+nav * {
+    box-sizing: border-box !important;
+}
+
+nav .group:hover .opacity-0 {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+nav .group:hover .invisible {
+    visibility: visible !important;
+}
+
+/* Transitions fluides avec priorité */
+nav .transition-colors {
+    transition: color 0.2s ease !important;
+}
+
+nav .transition-all {
+    transition: all 0.2s ease !important;
+}
+
+nav .transition-opacity {
+    transition: opacity 0.2s ease !important;
+}
+
+/* Couleurs hover avec !important pour override Bootstrap */
+nav .hover\:text-indigo-600:hover {
+    color: #4f46e5 !important;
+}
+
+nav .hover\:bg-gray-50:hover {
+    background-color: #f9fafb !important;
+}
+
+nav .hover\:bg-red-50:hover {
+    background-color: #fef2f2 !important;
+}
+
+nav .hover\:bg-indigo-700:hover {
+    background-color: #4338ca !important;
+}
+
+nav .hover\:opacity-80:hover {
+    opacity: 0.8 !important;
+}
+
+nav .hover\:bg-gray-100:hover {
+    background-color: #f3f4f6 !important;
+}
+
+/* Menu dropdown avec priorité absolue */
+nav .group:hover .group-hover\:opacity-100 {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateY(0) !important;
+}
+
+nav .group:hover .group-hover\:visible {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Styles pour les boutons */
+button:hover, a:hover {
+    transform: translateY(-1px);
 }

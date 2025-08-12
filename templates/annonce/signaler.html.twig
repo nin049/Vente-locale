@@ -1,0 +1,100 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Signaler une annonce - {{ parent() }}{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- En-tête -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">Signaler une annonce</h1>
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            <strong>Important :</strong> Utilisez cette fonction uniquement si vous pensez que cette annonce 
+                            viole nos conditions d'utilisation ou contient du contenu inapproprié.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations sur l'annonce -->
+        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Annonce signalée</h2>
+            <div class="flex items-start space-x-4">
+                {% if produit.images and produit.images|length > 0 %}
+                    <img src="{{ asset('uploads/' ~ produit.images[0]) }}" 
+                         alt="{{ produit.nom }}" 
+                         class="w-20 h-20 object-cover rounded-lg">
+                {% else %}
+                    <div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-image text-gray-400 text-2xl"></i>
+                    </div>
+                {% endif %}
+                <div class="flex-1">
+                    <h3 class="font-semibold text-lg text-gray-900">{{ produit.nom }}</h3>
+                    <p class="text-gray-600 text-sm mt-1">{{ produit.description|slice(0, 100) }}{% if produit.description|length > 100 %}...{% endif %}</p>
+                    <p class="text-blue-600 font-semibold mt-2">{{ produit.prixInitial }} €</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulaire de signalement -->
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">Détails du signalement</h2>
+            
+            {{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+                <div>
+                    {{ form_label(form.signalement, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}}) }}
+                    {{ form_widget(form.signalement, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500'}}) }}
+                    {{ form_errors(form.signalement) }}
+                </div>
+
+                <div>
+                    {{ form_label(form.commentaire, null, {'label_attr': {'class': 'block text-sm font-medium text-gray-700 mb-2'}}) }}
+                    {{ form_widget(form.commentaire, {'attr': {'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500'}}) }}
+                    {{ form_errors(form.commentaire) }}
+                    <p class="mt-1 text-sm text-gray-500">
+                        Décrivez en détail le problème rencontré avec cette annonce. Plus votre signalement sera précis, 
+                        plus nous pourrons traiter votre demande rapidement.
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <a href="{{ path('app_annonce_details', {id: produit.id}) }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Retour à l'annonce
+                    </a>
+                    
+                    {{ form_widget(form.submit, {'attr': {'class': 'inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'}}) }}
+                </div>
+            {{ form_end(form) }}
+        </div>
+
+        <!-- Informations supplémentaires -->
+        <div class="mt-8 bg-blue-50 rounded-lg p-6">
+            <h3 class="text-lg font-medium text-blue-900 mb-3">Que se passe-t-il après ?</h3>
+            <ul class="text-sm text-blue-800 space-y-2">
+                <li class="flex items-start">
+                    <i class="fas fa-check text-blue-600 mt-1 mr-3"></i>
+                    Votre signalement sera examiné par notre équipe de modération
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-clock text-blue-600 mt-1 mr-3"></i>
+                    Nous traitons généralement les signalements sous 24h
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-envelope text-blue-600 mt-1 mr-3"></i>
+                    Vous recevrez une notification si une action est prise
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

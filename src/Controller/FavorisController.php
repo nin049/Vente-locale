@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Utilisateur;
+use App\Repository\ProduitRepository;
 use App\Service\Api\FavorisApiService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,7 +15,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class FavorisController extends AbstractController
 {
     public function __construct(
-        private FavorisApiService $favorisApiService
+        private FavorisApiService $favorisApiService,
+        private ProduitRepository $produitRepository
     ) {
     }
 
@@ -25,12 +27,24 @@ class FavorisController extends AbstractController
         /** @var Utilisateur $user */
         $user = $this->getUser();
         $favoris = [];
+        $produitsAvecFavoris = [];
         $apiDisponible = false;
 
         try {
             $apiDisponible = $this->favorisApiService->isApiDisponible();
             if ($apiDisponible && $user) {
                 $favoris = $this->favorisApiService->getFavorisByUtilisateur($user->getId());
+                
+                // Récupérer les informations complètes des produits pour chaque favori
+                foreach ($favoris as $favori) {
+                    $produit = $this->produitRepository->find($favori['produitId']);
+                    if ($produit) {
+                        $produitsAvecFavoris[] = [
+                            'favori' => $favori,
+                            'produit' => $produit
+                        ];
+                    }
+                }
             }
         } catch (\Exception $e) {
             $this->addFlash('error', 'Erreur lors de la récupération des favoris via l\'API .NET');
@@ -38,6 +52,7 @@ class FavorisController extends AbstractController
 
         return $this->render('favoris/index.html.twig', [
             'favoris' => $favoris,
+            'produits_favoris' => $produitsAvecFavoris,
             'api_disponible' => $apiDisponible,
         ]);
     }

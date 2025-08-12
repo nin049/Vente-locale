@@ -1,0 +1,360 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Conversation avec {{ autreParticipant.prenom }} {{ autreParticipant.nom }}{% endblock %}
+
+{% block body %}
+	<div class="min-h-screen bg-gray-50">
+		<!-- En-tête de la conversation -->
+		<div class="bg-white border-b border-gray-100 sticky top-0 z-50">
+			<div class="container mx-auto px-6 py-4">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center space-x-4">
+						<!-- Bouton retour -->
+						<a href="{{ path('app_messages_index') }}" class="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+							<svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+							</svg>
+						</a>
+
+						<!-- Avatar -->
+						<div class="w-12 h-12 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center">
+							<span class="text-white font-semibold">
+								{{ autreParticipant.prenom|first|upper }}{{ autreParticipant.nom|first|upper }}
+							</span>
+						</div>
+
+						<!-- Infos participant -->
+						<div>
+							<h1 class="text-xl font-semibold text-gray-900">{{ autreParticipant.prenom }} {{ autreParticipant.nom }}</h1>
+							<div class="flex items-center text-sm text-gray-600">
+								<svg class="w-4 h-4 mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+									<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+								</svg>
+								<span>{{ conversation.produit.nom }}</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Actions -->
+					<div class="flex items-center space-x-3">
+						<a href="{{ path('app_annonce_details', {'id': conversation.produit.id}) }}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 text-sm font-medium">
+							Voir l'annonce
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Zone de messages -->
+		<div class="container mx-auto px-6 py-6">
+			<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden max-h-[70vh] flex flex-col">
+				
+				<!-- Messages -->
+				<div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-4" style="max-height: 500px;">
+					{% if messages is empty %}
+						<div class="text-center py-8">
+							<div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+								<svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+								</svg>
+							</div>
+							<p class="text-gray-500">Aucun message pour le moment</p>
+						</div>
+					{% else %}
+						{% for message in messages %}
+							{% set estAuteur = message.auteur == app.user %}
+							<div class="flex {{ estAuteur ? 'justify-end' : 'justify-start' }}">
+								<div class="max-w-xs lg:max-w-md">
+									{% if not estAuteur %}
+										<div class="flex items-end space-x-2">
+											<div class="w-8 h-8 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center flex-shrink-0">
+												<span class="text-white text-xs font-semibold">
+													{{ message.auteur.prenom|first|upper }}{{ message.auteur.nom|first|upper }}
+												</span>
+											</div>
+											<div>
+												<div class="bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md px-4 py-3">
+													<p class="text-sm">{{ message.contenu|nl2br }}</p>
+												</div>
+												<div class="flex items-center mt-1 text-xs text-gray-500 ml-3">
+													<span>{{ message.createdAt|date('H:i') }}</span>
+													{% if message.isEdited %}
+														<span class="ml-2 italic">modifié</span>
+													{% endif %}
+												</div>
+											</div>
+										</div>
+									{% else %}
+										<div class="flex items-end justify-end space-x-2">
+											<div class="text-right">
+												<div class="bg-slate-900 text-white rounded-2xl rounded-br-md px-4 py-3">
+													<p class="text-sm">{{ message.contenu|nl2br }}</p>
+												</div>
+												<div class="flex items-center justify-end mt-1 text-xs text-gray-500 mr-3">
+													<span>{{ message.createdAt|date('H:i') }}</span>
+													{% if message.isEdited %}
+														<span class="ml-2 italic">modifié</span>
+													{% endif %}
+													{% if message.lu %}
+														<svg class="w-4 h-4 ml-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+															<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+														</svg>
+													{% endif %}
+												</div>
+											</div>
+										</div>
+									{% endif %}
+								</div>
+							</div>
+						{% endfor %}
+					{% endif %}
+				</div>
+
+				<!-- Zone de saisie -->
+				<div class="border-t border-gray-100 p-4 bg-gray-50">
+					<form id="message-form" class="flex items-end space-x-3">
+						<div class="flex-1">
+							<textarea 
+								id="message-input" 
+								name="contenu" 
+								placeholder="Tapez votre message..." 
+								class="w-full resize-none rounded-lg border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 text-sm"
+								rows="2"
+								maxlength="1000"
+								required
+							></textarea>
+						</div>
+						<button 
+							type="submit" 
+							id="send-button"
+							class="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+							</svg>
+							<span>Envoyer</span>
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Container pour les notifications -->
+	<div id="notification-container" class="fixed top-6 right-6 z-50 space-y-2"></div>
+
+	<script>
+		const conversationId = {{ conversation.id }};
+		const currentUserId = {{ app.user.id }};
+		let dernierMessageId = {% if messages is not empty %}{{ messages|last.id }}{% else %}0{% endif %};
+
+		// Initialisation
+		document.addEventListener('DOMContentLoaded', function() {
+			const messagesContainer = document.getElementById('messages-container');
+			const messageForm = document.getElementById('message-form');
+			const messageInput = document.getElementById('message-input');
+			const sendButton = document.getElementById('send-button');
+
+			// Faire défiler vers le bas
+			scrollToBottom();
+
+			// Marquer les messages comme lus
+			marquerMessagesCommeLus();
+
+			// Gestion du formulaire
+			messageForm.addEventListener('submit', function(e) {
+				e.preventDefault();
+				envoyerMessage();
+			});
+
+			// Envoyer avec Entrée (Shift+Entrée pour nouvelle ligne)
+			messageInput.addEventListener('keydown', function(e) {
+				if (e.key === 'Enter' && !e.shiftKey) {
+					e.preventDefault();
+					envoyerMessage();
+				}
+			});
+
+			// Polling pour récupérer les nouveaux messages
+			setInterval(recupererNouveauxMessages, 3000);
+		});
+
+		function scrollToBottom() {
+			const container = document.getElementById('messages-container');
+			container.scrollTop = container.scrollHeight;
+		}
+
+		function envoyerMessage() {
+			const messageInput = document.getElementById('message-input');
+			const sendButton = document.getElementById('send-button');
+			const contenu = messageInput.value.trim();
+
+			if (!contenu) return;
+
+			// Désactiver le bouton
+			sendButton.disabled = true;
+			messageInput.disabled = true;
+
+			fetch('{{ path('app_messages_envoyer') }}', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-Requested-With': 'XMLHttpRequest'
+				},
+				body: JSON.stringify({
+					conversationId: conversationId,
+					contenu: contenu
+				})
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					// Vider le champ de saisie
+					messageInput.value = '';
+					
+					// Ajouter le message à la conversation
+					ajouterMessageDansConversation(data.message, true);
+					
+					// Faire défiler vers le bas
+					scrollToBottom();
+					
+					// Mettre à jour le dernier message ID
+					dernierMessageId = data.message.id;
+				} else {
+					showNotification('Erreur lors de l\'envoi du message', 'error');
+				}
+			})
+			.catch(error => {
+				console.error('Erreur:', error);
+				showNotification('Erreur de communication', 'error');
+			})
+			.finally(() => {
+				// Réactiver les contrôles
+				sendButton.disabled = false;
+				messageInput.disabled = false;
+				messageInput.focus();
+			});
+		}
+
+		function marquerMessagesCommeLus() {
+			fetch('{{ path('app_messages_marquer_lu', {'conversationId': conversation.id}) }}', {
+				method: 'POST',
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest'
+				}
+			});
+		}
+
+		function recupererNouveauxMessages() {
+			fetch('{{ path('app_messages_derniers', {'conversationId': conversation.id}) }}' + `?dernierMessageId=${dernierMessageId}`, {
+				method: 'GET',
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest'
+				}
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success && data.messages.length > 0) {
+					data.messages.forEach(message => {
+						ajouterMessageDansConversation(message, message.auteur.id === currentUserId);
+						dernierMessageId = Math.max(dernierMessageId, message.id);
+					});
+					scrollToBottom();
+				}
+			})
+			.catch(error => {
+				console.error('Erreur lors de la récupération des messages:', error);
+			});
+		}
+
+		function ajouterMessageDansConversation(message, estAuteur) {
+			const messagesContainer = document.getElementById('messages-container');
+			
+			const messageDiv = document.createElement('div');
+			messageDiv.className = `flex ${estAuteur ? 'justify-end' : 'justify-start'}`;
+			
+			const dateFormatee = new Date(message.createdAt).toLocaleTimeString('fr-FR', {
+				hour: '2-digit',
+				minute: '2-digit'
+			});
+
+			if (estAuteur) {
+				messageDiv.innerHTML = `
+					<div class="max-w-xs lg:max-w-md">
+						<div class="flex items-end justify-end space-x-2">
+							<div class="text-right">
+								<div class="bg-slate-900 text-white rounded-2xl rounded-br-md px-4 py-3">
+									<p class="text-sm">${message.contenu.replace(/\n/g, '<br>')}</p>
+								</div>
+								<div class="flex items-center justify-end mt-1 text-xs text-gray-500 mr-3">
+									<span>${dateFormatee}</span>
+									${message.lu ? '<svg class="w-4 h-4 ml-1 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>' : ''}
+								</div>
+							</div>
+						</div>
+					</div>
+				`;
+			} else {
+				messageDiv.innerHTML = `
+					<div class="max-w-xs lg:max-w-md">
+						<div class="flex items-end space-x-2">
+							<div class="w-8 h-8 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center flex-shrink-0">
+								<span class="text-white text-xs font-semibold">
+									${message.auteur.prenom.charAt(0).toUpperCase()}${message.auteur.nom.charAt(0).toUpperCase()}
+								</span>
+							</div>
+							<div>
+								<div class="bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md px-4 py-3">
+									<p class="text-sm">${message.contenu.replace(/\n/g, '<br>')}</p>
+								</div>
+								<div class="flex items-center mt-1 text-xs text-gray-500 ml-3">
+									<span>${dateFormatee}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				`;
+			}
+
+			messagesContainer.appendChild(messageDiv);
+		}
+
+		function showNotification(message, type = 'success') {
+			const container = document.getElementById('notification-container');
+			const notification = document.createElement('div');
+
+			const config = {
+				success: { bg: 'bg-emerald-500', icon: '✓', border: 'border-emerald-400' },
+				error: { bg: 'bg-red-500', icon: '✗', border: 'border-red-400' }
+			};
+
+			const style = config[type] || config.success;
+
+			notification.className = `${style.bg} ${style.border} text-white px-6 py-4 rounded-xl shadow-xl border transform translate-x-full transition-all duration-300 flex items-center backdrop-blur-sm`;
+			notification.innerHTML = `
+				<div class="flex items-center">
+					<span class="mr-3 font-bold text-lg w-6 h-6 flex items-center justify-center bg-white/20 rounded-full">${style.icon}</span>
+					<span class="font-medium">${message}</span>
+				</div>
+			`;
+
+			container.appendChild(notification);
+
+			// Animation d'entrée
+			setTimeout(() => {
+				notification.classList.remove('translate-x-full');
+				notification.classList.add('shadow-2xl');
+			}, 100);
+
+			// Animation de sortie et suppression
+			setTimeout(() => {
+				notification.classList.add('translate-x-full', 'opacity-0');
+				setTimeout(() => {
+					if (notification.parentNode) {
+						notification.parentNode.removeChild(notification);
+					}
+				}, 300);
+			}, 4000);
+		}
+	</script>
+{% endblock %}

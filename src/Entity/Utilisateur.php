@@ -67,6 +67,24 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Favoris::class, mappedBy: 'utilisateur')]
     private Collection $favoris;
 
+    /**
+     * @var Collection<int, Conversation>
+     */
+    #[ORM\OneToMany(targetEntity: Conversation::class, mappedBy: 'acheteur')]
+    private Collection $conversationsAcheteur;
+
+    /**
+     * @var Collection<int, Conversation>
+     */
+    #[ORM\OneToMany(targetEntity: Conversation::class, mappedBy: 'vendeur')]
+    private Collection $conversationsVendeur;
+
+    /**
+     * @var Collection<int, Message>
+     */
+    #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'auteur')]
+    private Collection $messages;
+
     public function __construct()
     {
         $this->alertes = new ArrayCollection();
@@ -74,6 +92,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->possedes = new ArrayCollection();
         $this->appartients = new ArrayCollection();
         $this->favoris = new ArrayCollection();
+        $this->conversationsAcheteur = new ArrayCollection();
+        $this->conversationsVendeur = new ArrayCollection();
+        $this->messages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -340,5 +361,124 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Conversation>
+     */
+    public function getConversationsAcheteur(): Collection
+    {
+        return $this->conversationsAcheteur;
+    }
+
+    public function addConversationsAcheteur(Conversation $conversation): static
+    {
+        if (!$this->conversationsAcheteur->contains($conversation)) {
+            $this->conversationsAcheteur->add($conversation);
+            $conversation->setAcheteur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeConversationsAcheteur(Conversation $conversation): static
+    {
+        if ($this->conversationsAcheteur->removeElement($conversation)) {
+            if ($conversation->getAcheteur() === $this) {
+                $conversation->setAcheteur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Conversation>
+     */
+    public function getConversationsVendeur(): Collection
+    {
+        return $this->conversationsVendeur;
+    }
+
+    public function addConversationsVendeur(Conversation $conversation): static
+    {
+        if (!$this->conversationsVendeur->contains($conversation)) {
+            $this->conversationsVendeur->add($conversation);
+            $conversation->setVendeur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeConversationsVendeur(Conversation $conversation): static
+    {
+        if ($this->conversationsVendeur->removeElement($conversation)) {
+            if ($conversation->getVendeur() === $this) {
+                $conversation->setVendeur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Message>
+     */
+    public function getMessages(): Collection
+    {
+        return $this->messages;
+    }
+
+    public function addMessage(Message $message): static
+    {
+        if (!$this->messages->contains($message)) {
+            $this->messages->add($message);
+            $message->setAuteur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMessage(Message $message): static
+    {
+        if ($this->messages->removeElement($message)) {
+            if ($message->getAuteur() === $this) {
+                $message->setAuteur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Obtenir toutes les conversations de l'utilisateur (acheteur + vendeur)
+     */
+    public function getToutesConversations(): array
+    {
+        $conversations = [];
+        
+        foreach ($this->conversationsAcheteur as $conversation) {
+            $conversations[] = $conversation;
+        }
+        
+        foreach ($this->conversationsVendeur as $conversation) {
+            $conversations[] = $conversation;
+        }
+        
+        return $conversations;
+    }
+
+    /**
+     * Compter le nombre total de messages non lus
+     */
+    public function getNombreMessagesNonLus(): int
+    {
+        $count = 0;
+        
+        foreach ($this->getToutesConversations() as $conversation) {
+            $count += $conversation->getNombreMessagesNonLus($this);
+        }
+        
+        return $count;
     }
 }

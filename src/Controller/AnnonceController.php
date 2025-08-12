@@ -24,19 +24,114 @@ class AnnonceController extends AbstractController
     ) {
     }
     #[Route('/annonces', name: 'app_annonces')]
-    public function index(EntityManagerInterface $entityManager): Response
+    public function index(Request $request, EntityManagerInterface $entityManager): Response
     {
-        // Récupérer tous les produits (annonces) avec leurs relations
-        $produits = $entityManager->getRepository(Produit::class)->createQueryBuilder('p')
+        // Récupération des paramètres de filtrage
+        $recherche = $request->query->get('recherche', '');
+        $categorieId = $request->query->get('categorie', '');
+        $etatId = $request->query->get('etat', '');
+        $prixMin = $request->query->get('prix_min', '');
+        $prixMax = $request->query->get('prix_max', '');
+        $tri = $request->query->get('tri', 'recent');
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = 12; // Nombre d'annonces par page
+
+        // Construction de la requête avec filtres
+        $qb = $entityManager->getRepository(Produit::class)->createQueryBuilder('p')
             ->leftJoin('p.etat', 'e')
             ->leftJoin('p.produitCategories', 'pc')
             ->leftJoin('pc.categorie', 'c')
-            ->addSelect('e', 'pc', 'c')
+            ->leftJoin('p.appartients', 'a')
+            ->leftJoin('a.utilisateur', 'u')
+            ->addSelect('e', 'pc', 'c', 'a', 'u');
+
+        // Filtre par recherche (nom ou description)
+        if (!empty($recherche)) {
+            $qb->andWhere('p.nom LIKE :recherche OR p.description LIKE :recherche')
+               ->setParameter('recherche', '%' . $recherche . '%');
+        }
+
+        // Filtre par catégorie
+        if (!empty($categorieId) && is_numeric($categorieId)) {
+            $qb->andWhere('c.id = :categorieId')
+               ->setParameter('categorieId', $categorieId);
+        }
+
+        // Filtre par état
+        if (!empty($etatId) && is_numeric($etatId)) {
+            $qb->andWhere('e.id = :etatId')
+               ->setParameter('etatId', $etatId);
+        }
+
+        // Filtre par prix minimum
+        if (!empty($prixMin) && is_numeric($prixMin)) {
+            $qb->andWhere('p.prixInitial >= :prixMin')
+               ->setParameter('prixMin', (float) $prixMin);
+        }
+
+        // Filtre par prix maximum
+        if (!empty($prixMax) && is_numeric($prixMax)) {
+            $qb->andWhere('p.prixInitial <= :prixMax')
+               ->setParameter('prixMax', (float) $prixMax);
+        }
+
+        // Ordre selon le tri choisi
+        switch ($tri) {
+            case 'prix_asc':
+                $qb->orderBy('p.prixInitial', 'ASC');
+                break;
+            case 'prix_desc':
+                $qb->orderBy('p.prixInitial', 'DESC');
+                break;
+            case 'nom':
+                $qb->orderBy('p.nom', 'ASC');
+                break;
+            case 'recent':
+            default:
+                $qb->orderBy('p.id', 'DESC');
+                break;
+        }
+
+        // Compte total pour la pagination
+        $totalQuery = clone $qb;
+        $totalItems = count($totalQuery->select('p.id')->getQuery()->getResult());
+        $totalPages = ceil($totalItems / $limit);
+
+        // Application de la pagination
+        $produits = $qb->setFirstResult(($page - 1) * $limit)
+                       ->setMaxResults($limit)
+                       ->getQuery()
+                       ->getResult();
+
+        // Récupération des données pour les filtres
+        $categories = $entityManager->getRepository(\App\Entity\Categorie::class)->findAll();
+        $etats = $entityManager->getRepository(\App\Entity\Etat::class)->findAll();
+
+        // Calcul des statistiques de prix pour les suggestions
+        $prixStats = $entityManager->getRepository(Produit::class)->createQueryBuilder('p')
+            ->select('MIN(p.prixInitial) as prix_min, MAX(p.prixInitial) as prix_max, AVG(p.prixInitial) as prix_moyen')
             ->getQuery()
-            ->getResult();
+            ->getSingleResult();
 
         return $this->render('annonce/annonces.html.twig', [
             'produits' => $produits,
+            'categories' => $categories,
+            'etats' => $etats,
+            'prix_stats' => $prixStats,
+            'filtres' => [
+                'recherche' => $recherche,
+                'categorie' => $categorieId,
+                'etat' => $etatId,
+                'prix_min' => $prixMin,
+                'prix_max' => $prixMax,
+                'tri' => $tri,
+            ],
+            'pagination' => [
+                'page_courante' => $page,
+                'total_pages' => $totalPages,
+                'total_items' => $totalItems,
+                'limit' => $limit,
+            ],
         ]);
     }
 
@@ -416,5 +511,48 @@ class AnnonceController extends AbstractController
         } catch (\Exception $e) {
             return new JsonResponse(['count' => 0, 'error' => 'Erreur lors de la récupération du compteur'], 500);
         }
+    }
+
+    #[Route('/annonces/{id}/signaler', name: 'app_annonce_signaler')]
+    #[IsGranted('ROLE_USER')]
+    public function signaler(Produit $produit, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        // Vérifier que l'utilisateur ne signale pas sa propre annonce
+        if ($produit->getProprietaire() === $this->getUser()) {
+            $this->addFlash('error', 'Vous ne pouvez pas signaler votre propre annonce.');
+            return $this->redirectToRoute('app_annonce_details', ['id' => $produit->getId()]);
+        }
+
+        // Vérifier si l'utilisateur a déjà signalé cette annonce
+        $signalementExistant = $entityManager->getRepository(\App\Entity\Signale::class)
+            ->findOneBy([
+                'produit' => $produit,
+                'signalePar' => $this->getUser()
+            ]);
+
+        if ($signalementExistant) {
+            $this->addFlash('warning', 'Vous avez déjà signalé cette annonce.');
+            return $this->redirectToRoute('app_annonce_details', ['id' => $produit->getId()]);
+        }
+
+        $signale = new \App\Entity\Signale();
+        $signale->setProduit($produit);
+        $signale->setSignalePar($this->getUser());
+
+        $form = $this->createForm(\App\Form\SignalementType::class, $signale);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($signale);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Votre signalement a été envoyé. Il sera examiné par notre équipe.');
+            return $this->redirectToRoute('app_annonce_details', ['id' => $produit->getId()]);
+        }
+
+        return $this->render('annonce/signaler.html.twig', [
+            'produit' => $produit,
+            'form' => $form,
+        ]);
     }
 }

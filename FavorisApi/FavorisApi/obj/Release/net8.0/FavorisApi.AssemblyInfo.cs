@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FavorisApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f5ff37bd4d1333db2379bdcd2d68e5136e29b8ca")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4efdf6beeff3150481c1a8696fcef9c8ad973480")]
 [assembly: System.Reflection.AssemblyProductAttribute("FavorisApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FavorisApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

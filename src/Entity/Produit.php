@@ -58,12 +58,19 @@ class Produit
     #[ORM\OneToMany(targetEntity: Favoris::class, mappedBy: 'produit')]
     private Collection $favoris;
 
+    /**
+     * @var Collection<int, Conversation>
+     */
+    #[ORM\OneToMany(targetEntity: Conversation::class, mappedBy: 'produit')]
+    private Collection $conversations;
+
     public function __construct()
     {
         $this->appartients = new ArrayCollection();
         $this->signales = new ArrayCollection();
         $this->produitCategories = new ArrayCollection();
         $this->favoris = new ArrayCollection();
+        $this->conversations = new ArrayCollection();
         $this->images = $this->images ?? [];
     }
 
@@ -291,5 +298,69 @@ class Produit
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Conversation>
+     */
+    public function getConversations(): Collection
+    {
+        return $this->conversations;
+    }
+
+    public function addConversation(Conversation $conversation): static
+    {
+        if (!$this->conversations->contains($conversation)) {
+            $this->conversations->add($conversation);
+            $conversation->setProduit($this);
+        }
+
+        return $this;
+    }
+
+    public function removeConversation(Conversation $conversation): static
+    {
+        if ($this->conversations->removeElement($conversation)) {
+            if ($conversation->getProduit() === $this) {
+                $conversation->setProduit(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Obtenir le nombre de conversations actives pour ce produit
+     */
+    public function getNombreConversations(): int
+    {
+        return $this->conversations->filter(function (Conversation $conversation) {
+            return $conversation->isActive();
+        })->count();
+    }
+
+    /**
+     * Vérifier si un utilisateur a déjà une conversation pour ce produit
+     */
+    public function aConversationAvec(Utilisateur $utilisateur): bool
+    {
+        foreach ($this->conversations as $conversation) {
+            if ($conversation->isActive() && 
+                ($conversation->getAcheteur() === $utilisateur || $conversation->getVendeur() === $utilisateur)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Obtenir le propriétaire du produit
+     */
+    public function getProprietaire(): ?Utilisateur
+    {
+        foreach ($this->appartients as $appartient) {
+            return $appartient->getUtilisateur();
+        }
+        return null;
     }
 }

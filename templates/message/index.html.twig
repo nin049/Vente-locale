@@ -1,20 +1,121 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello MessageController!{% endblock %}
+{% block title %}Mes Conversations{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+	<div class="min-h-screen bg-gray-50">
+		<!-- En-tête -->
+		<div class="bg-white border-b border-gray-100">
+			<div class="container mx-auto px-6 py-6">
+				<div class="flex items-center justify-between">
+					<div>
+						<h1 class="text-3xl font-bold text-gray-900">Mes Conversations</h1>
+						<p class="text-gray-600 mt-1">Gérez vos discussions avec les autres utilisateurs</p>
+					</div>
+					{% if messagesNonLus > 0 %}
+						<div class="bg-red-500 text-white px-4 py-2 rounded-full font-semibold">
+							{{ messagesNonLus }} message{{ messagesNonLus > 1 ? 's' : '' }} non lu{{ messagesNonLus > 1 ? 's' : '' }}
+						</div>
+					{% endif %}
+				</div>
+			</div>
+		</div>
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+		<div class="container mx-auto px-6 py-8">
+			{% if conversations is empty %}
+				<!-- État vide -->
+				<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+					<div class="max-w-sm mx-auto">
+						<div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+							<svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+							</svg>
+						</div>
+						<h3 class="text-xl font-semibold text-gray-900 mb-3">Aucune conversation</h3>
+						<p class="text-gray-600 mb-6">Vous n'avez pas encore de conversations. Commencez par contacter un vendeur sur une annonce qui vous intéresse !</p>
+						<a href="{{ path('app_annonces') }}" class="inline-flex items-center px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-colors duration-200">
+							<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+							</svg>
+							Parcourir les annonces
+						</a>
+					</div>
+				</div>
+			{% else %}
+				<!-- Liste des conversations -->
+				<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+					<div class="divide-y divide-gray-100">
+						{% for conversation in conversations %}
+							{% set autreParticipant = conversation.autreParticipant(app.user) %}
+							{% set dernierMessage = conversation.dernierMessage %}
+							{% set messagesNonLus = conversation.nombreMessagesNonLus(app.user) %}
+							
+							<a href="{{ path('app_messages_conversation', {'id': conversation.id}) }}" class="block hover:bg-gray-50 transition-colors duration-200 p-6">
+								<div class="flex items-center space-x-4">
+									<!-- Avatar -->
+									<div class="w-14 h-14 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center flex-shrink-0">
+										<span class="text-white font-semibold text-lg">
+											{{ autreParticipant.prenom|first|upper }}{{ autreParticipant.nom|first|upper }}
+										</span>
+									</div>
 
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>/Users/nonolezozo/Documents/Code/Ecole/Symfony/blog/src/Controller/MessageController.php</code></li>
-        <li>Your template at <code>/Users/nonolezozo/Documents/Code/Ecole/Symfony/blog/templates/message/index.html.twig</code></li>
-    </ul>
-</div>
+									<!-- Contenu -->
+									<div class="flex-1 min-w-0">
+										<div class="flex items-center justify-between mb-1">
+											<h3 class="text-lg font-semibold text-gray-900 truncate">
+												{{ autreParticipant.prenom }} {{ autreParticipant.nom }}
+											</h3>
+											{% if dernierMessage %}
+												<span class="text-sm text-gray-500 flex-shrink-0">
+													{{ dernierMessage.createdAt|date('d/m/Y H:i') }}
+												</span>
+											{% endif %}
+										</div>
+
+										<!-- Produit concerné -->
+										<div class="flex items-center text-sm text-gray-600 mb-2">
+											<svg class="w-4 h-4 mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+												<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+											</svg>
+											<span class="truncate">{{ conversation.produit.nom }}</span>
+											<span class="ml-2 px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+												{{ conversation.produit.prixInitial|number_format(2, ',', ' ') }}€
+											</span>
+										</div>
+
+										<!-- Dernier message -->
+										{% if dernierMessage %}
+											<div class="flex items-center justify-between">
+												<p class="text-sm text-gray-600 truncate flex-1 mr-3">
+													{% if dernierMessage.auteur == app.user %}
+														<span class="font-medium">Vous :</span>
+													{% endif %}
+													{{ dernierMessage.contenu|slice(0, 100) }}{% if dernierMessage.contenu|length > 100 %}...{% endif %}
+												</p>
+												
+												{% if messagesNonLus > 0 %}
+													<div class="bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
+														{{ messagesNonLus > 9 ? '9+' : messagesNonLus }}
+													</div>
+												{% endif %}
+											</div>
+										{% else %}
+											<p class="text-sm text-gray-500 italic">Aucun message</p>
+										{% endif %}
+									</div>
+
+									<!-- Flèche -->
+									<div class="flex-shrink-0">
+										<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+										</svg>
+									</div>
+								</div>
+							</a>
+						{% endfor %}
+					</div>
+				</div>
+			{% endif %}
+		</div>
+	</div>
 {% endblock %}

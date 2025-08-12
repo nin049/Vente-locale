@@ -1,0 +1,280 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Liste des signalements - Administration{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Gestion des signalements</h1>
+    <div>
+        <span class="badge bg-info">{{ total_signalements }} signalement(s)</span>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="statut" class="form-label">Filtrer par statut</label>
+                <select name="statut" id="statut" class="form-select" onchange="this.form.submit()">
+                    <option value="">Tous les statuts</option>
+                    <option value="en_attente" {{ statut_filtre == 'en_attente' ? 'selected' : '' }}>En attente</option>
+                    <option value="traite" {{ statut_filtre == 'traite' ? 'selected' : '' }}>Traités</option>
+                    <option value="rejete" {{ statut_filtre == 'rejete' ? 'selected' : '' }}>Rejetés</option>
+                </select>
+            </div>
+            <div class="col-md-8 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filtrer</button>
+                <a href="{{ path('admin_signalements') }}" class="btn btn-outline-secondary">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if signalements %}
+<!-- Actions groupées -->
+{% if statut_filtre == 'en_attente' or statut_filtre is empty %}
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="POST" action="{{ path('admin_signalements_actions_groupees') }}" id="form-actions-groupees">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="action" class="form-label">Actions groupées</label>
+                    <select name="action" id="action" class="form-select">
+                        <option value="">Choisir une action</option>
+                        <option value="traiter">Marquer comme traités</option>
+                        <option value="rejeter">Rejeter</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <button type="submit" class="btn btn-warning" onclick="return confirm('Êtes-vous sûr de vouloir appliquer cette action aux signalements sélectionnés ?')">
+                        <i class="fas fa-cogs me-1"></i>Appliquer
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary ms-2" id="btn-select-all">
+                        Tout sélectionner
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary ms-1" id="btn-deselect-all">
+                        Tout désélectionner
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- Liste des signalements -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-admin">
+                <thead>
+                    <tr>
+                        {% if statut_filtre == 'en_attente' or statut_filtre is empty %}
+                        <th width="50">
+                            <input type="checkbox" id="select-all" class="form-check-input">
+                        </th>
+                        {% endif %}
+                        <th>Date</th>
+                        <th>Produit</th>
+                        <th>Nature</th>
+                        <th>Signalé par</th>
+                        <th>Statut</th>
+                        <th>Traité par</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for signale in signalements %}
+                    <tr>
+                        {% if statut_filtre == 'en_attente' or statut_filtre is empty %}
+                        <td>
+                            {% if signale.isEnAttente %}
+                            <input type="checkbox" name="signalements[]" value="{{ signale.id }}" 
+                                   class="form-check-input signalement-checkbox" form="form-actions-groupees">
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td>
+                            <small>{{ signale.dateSignalement|date('d/m/Y H:i') }}</small>
+                        </td>
+                        <td>
+                            {% if signale.produit %}
+                                <div>
+                                    <strong>{{ signale.produit.nom|slice(0, 40) }}{% if signale.produit.nom|length > 40 %}...{% endif %}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ signale.produit.prixInitial }} €</small>
+                                </div>
+                            {% else %}
+                                <em class="text-muted">Produit supprimé</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if signale.signalement %}
+                                <span class="badge bg-secondary">{{ signale.signalement.natureSignalement }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if signale.signalePar %}
+                                <div>
+                                    {{ signale.signalePar.prenom }} {{ signale.signalePar.nom }}
+                                    <br>
+                                    <small class="text-muted">{{ signale.signalePar.email }}</small>
+                                </div>
+                            {% else %}
+                                <em class="text-muted">Utilisateur supprimé</em>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ signale.statutCssClass }} badge-status">
+                                {{ signale.statutFormate }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if signale.traitePar %}
+                                <div>
+                                    {{ signale.traitePar.prenom }} {{ signale.traitePar.nom }}
+                                    <br>
+                                    <small class="text-muted">{{ signale.dateTraitement|date('d/m/Y H:i') }}</small>
+                                </div>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ path('admin_signalement_detail', {id: signale.id}) }}" 
+                                   class="btn btn-sm btn-outline-primary btn-action">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if signale.produit %}
+                                <a href="{{ path('app_annonce_details', {id: signale.produit.id}) }}" 
+                                   class="btn btn-sm btn-outline-info btn-action" target="_blank">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav aria-label="Navigation des signalements" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_courante > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="{{ path('admin_signalements', {
+                statut: statut_filtre,
+                page: page_courante - 1
+            }) }}">Précédent</a>
+        </li>
+        {% endif %}
+        
+        {% for page in 1..total_pages %}
+            {% if page == page_courante %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page }}</span>
+                </li>
+            {% elseif page >= page_courante - 2 and page <= page_courante + 2 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ path('admin_signalements', {
+                        statut: statut_filtre,
+                        page: page
+                    }) }}">{{ page }}</a>
+                </li>
+            {% elseif page == 1 or page == total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ path('admin_signalements', {
+                        statut: statut_filtre,
+                        page: page
+                    }) }}">{{ page }}</a>
+                </li>
+            {% elseif page == 2 or page == total_pages - 1 %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_courante < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="{{ path('admin_signalements', {
+                statut: statut_filtre,
+                page: page_courante + 1
+            }) }}">Suivant</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="card">
+    <div class="card-body text-center">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h5>Aucun signalement trouvé</h5>
+        {% if statut_filtre %}
+        <p class="text-muted">Aucun signalement avec le statut "{{ statut_filtre }}".</p>
+        <a href="{{ path('admin_signalements') }}" class="btn btn-outline-primary">
+            Voir tous les signalements
+        </a>
+        {% else %}
+        <p class="text-muted">Aucun signalement n'a été effectué pour le moment.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion de la sélection/désélection de toutes les cases
+    const selectAllCheckbox = document.getElementById('select-all');
+    const signalementCheckboxes = document.querySelectorAll('.signalement-checkbox');
+    const btnSelectAll = document.getElementById('btn-select-all');
+    const btnDeselectAll = document.getElementById('btn-deselect-all');
+    
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            signalementCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+    }
+    
+    if (btnSelectAll) {
+        btnSelectAll.addEventListener('click', function() {
+            signalementCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            if (selectAllCheckbox) selectAllCheckbox.checked = true;
+        });
+    }
+    
+    if (btnDeselectAll) {
+        btnDeselectAll.addEventListener('click', function() {
+            signalementCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        });
+    }
+    
+    // Mettre à jour la case "tout sélectionner" si toutes les cases sont cochées/décochées
+    signalementCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const checkedCount = document.querySelectorAll('.signalement-checkbox:checked').length;
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = checkedCount === signalementCheckboxes.length;
+                selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < signalementCheckboxes.length;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

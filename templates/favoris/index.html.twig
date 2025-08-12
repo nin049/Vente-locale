@@ -1,62 +1,200 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Mes Favoris{% endblock %}
+{% block title %}Mes Favoris - VenteLocale{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <h1>Mes Favoris</h1>
-    
-    {% if not api_disponible %}
-        <div class="alert alert-warning" role="alert">
-            ⚠️ L'API des favoris n'est pas disponible. Assurez-vous que l'API .NET est démarrée.
-            <br>
-            <small>Pour démarrer l'API : <code>./start-favoris-api.sh</code></small>
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-heart text-red-500 mr-3"></i>Mes Favoris
+            </h1>
+            <p class="text-gray-600">Retrouvez toutes vos annonces préférées en un coup d'œil</p>
         </div>
-    {% endif %}
-
-    {% for flash_message in app.flashes('error') %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ flash_message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    {% endfor %}
-
-    {% if api_disponible %}
-        {% if favoris is empty %}
-            <div class="text-center py-5">
-                <h3 class="text-muted">Aucun favori pour le moment</h3>
-                <p class="text-muted">Commencez à ajouter des produits à vos favoris !</p>
-                <a href="{{ path('app_blog_index') }}" class="btn btn-primary">Parcourir les produits</a>
-            </div>
-        {% else %}
-            <div class="row">
-                {% for favori in favoris %}
-                    <div class="col-md-4 mb-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Favori #{{ favori.id }}</h5>
-                                <p class="card-text">
-                                    <strong>Utilisateur:</strong> {{ favori.utilisateurId }}<br>
-                                    <strong>Produit:</strong> {{ favori.produitId }}
-                                </p>
-                                <button class="btn btn-danger btn-sm" 
-                                        onclick="supprimerFavori({{ favori.produitId }})">
-                                    🗑️ Supprimer
-                                </button>
-                            </div>
-                        </div>
+        
+        <!-- Alerte API -->
+        {% if not api_disponible %}
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
                     </div>
-                {% endfor %}
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            <strong>Service temporairement indisponible</strong><br>
+                            L'API des favoris n'est pas disponible. Assurez-vous que l'API .NET est démarrée.
+                        </p>
+                        <p class="text-xs text-yellow-600 mt-1">
+                            <code class="bg-yellow-100 px-2 py-1 rounded">./start-favoris-api.sh</code>
+                        </p>
+                    </div>
+                </div>
             </div>
         {% endif %}
-    {% endif %}
+
+        <!-- Messages d'erreur -->
+        {% for flash_message in app.flashes('error') %}
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-times-circle text-red-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">{{ flash_message }}</p>
+                    </div>
+                    <div class="ml-auto pl-3">
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                                class="text-red-400 hover:text-red-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        {% if api_disponible %}
+            {% if produits_favoris is empty %}
+                <!-- État vide -->
+                <div class="text-center py-16">
+                    <div class="max-w-md mx-auto">
+                        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-heart text-4xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucun favori pour le moment</h3>
+                        <p class="text-gray-500 mb-8">Commencez à ajouter des annonces à vos favoris pour les retrouver facilement !</p>
+                        <a href="{{ path('app_annonces') }}" 
+                           class="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200">
+                            <i class="fas fa-search mr-2"></i>
+                            Parcourir les annonces
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+
+                <!-- Grille des favoris -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for item in produits_favoris %}
+                        {% set favori = item.favori %}
+                        {% set produit = item.produit %}
+                        
+                        <div class="bg-white rounded-xl shadow-sm border hover:shadow-md transition-all duration-200 overflow-hidden group">
+                            <!-- Image du produit -->
+                            <div class="relative h-48">
+                                {% if produit.images is not empty %}
+                                    <img src="/uploads/images/{{ produit.images[0] }}" 
+                                         alt="{{ produit.nom }}" 
+                                         class="w-full h-full object-cover">
+                                    {% if produit.images|length > 1 %}
+                                        <div class="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
+                                            +{{ produit.images|length - 1 }}
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="w-full h-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+                                        <i class="fas fa-image text-3xl text-indigo-300"></i>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Badge d'état -->
+                                {% if produit.etat %}
+                                    <div class="absolute top-2 left-2">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            {{ produit.etat.libelle }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Contenu -->
+                            <div class="p-6">
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex-1">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
+                                            {{ produit.nom }}
+                                        </h3>
+                                        <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                            {{ produit.description|slice(0, 100) }}{% if produit.description|length > 100 %}...{% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="flex-shrink-0 ml-4">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
+                                            <i class="fas fa-heart mr-1"></i>Favori
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Catégories -->
+                                {% if produit.produitCategories is not empty %}
+                                    <div class="flex flex-wrap gap-1 mb-4">
+                                        {% for produitCategorie in produit.produitCategories %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{ produitCategorie.categorie.libelle }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                <!-- Prix et date -->
+                                <div class="mb-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-2xl font-bold text-indigo-600">
+                                            {{ produit.prixInitial|number_format(2, ',', ' ') }}€
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center justify-between pt-4 border-t">
+                                    <a href="{{ path('app_annonce_details', {id: produit.id}) }}" 
+                                       class="inline-flex items-center text-indigo-600 hover:text-indigo-700 font-medium text-sm transition-colors">
+                                        <i class="fas fa-eye mr-2"></i>Voir l'annonce
+                                    </a>
+                                    <button onclick="supprimerFavori({{ produit.id }})" 
+                                            class="inline-flex items-center px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 text-sm font-medium">
+                                        <i class="fas fa-heart-broken mr-2"></i>
+                                        Retirer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Actions bulk (si vous voulez ajouter des actions groupées) -->
+                {% if produits_favoris|length > 1 %}
+                    <div class="mt-8 bg-white rounded-lg shadow-sm border p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions groupées</h3>
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="exporterFavoris()" 
+                                    class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium">
+                                <i class="fas fa-download mr-2"></i>Exporter
+                            </button>
+                            <button onclick="viderFavoris()" 
+                                    class="inline-flex items-center px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors font-medium">
+                                <i class="fas fa-trash mr-2"></i>Vider les favoris
+                            </button>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </div>
 </div>
 
+<!-- Scripts améliorés -->
 <script>
 async function supprimerFavori(produitId) {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce favori ?')) {
+    // Confirmation avec modal plus jolie
+    if (!confirm('🗑️ Êtes-vous sûr de vouloir retirer cette annonce de vos favoris ?')) {
         return;
     }
+
+    // Animation de chargement
+    const button = event.target.closest('button');
+    const originalContent = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Suppression...';
+    button.disabled = true;
 
     try {
         const response = await fetch(`{{ path('app_favoris_supprimer', {'produitId': 'PRODUIT_ID'}) }}`.replace('PRODUIT_ID', produitId), {
@@ -70,15 +208,51 @@ async function supprimerFavori(produitId) {
         const data = await response.json();
         
         if (data.success) {
-            // Recharger la page pour mettre à jour la liste
-            location.reload();
+            // Animation de suppression
+            const card = button.closest('.grid > div');
+            card.style.transform = 'scale(0.95)';
+            card.style.opacity = '0.5';
+            
+            setTimeout(() => {
+                location.reload();
+            }, 300);
         } else {
-            alert('Erreur : ' + data.message);
+            throw new Error(data.message || 'Erreur de suppression');
         }
     } catch (error) {
         console.error('Erreur:', error);
-        alert('Erreur de communication avec le serveur');
+        alert('❌ Erreur : ' + error.message);
+        
+        // Restaurer le bouton
+        button.innerHTML = originalContent;
+        button.disabled = false;
     }
 }
+
+async function exporterFavoris() {
+    alert('🚧 Fonctionnalité d\'export en cours de développement');
+}
+
+async function viderFavoris() {
+    if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer TOUS vos favoris ? Cette action est irréversible.')) {
+        return;
+    }
+    alert('🚧 Fonctionnalité en cours de développement');
+}
+
+// Animation au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.grid > div');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.4s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
 </script>
 {% endblock %}

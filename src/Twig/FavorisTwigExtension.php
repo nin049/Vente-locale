@@ -3,6 +3,7 @@
 namespace App\Twig;
 
 use App\Entity\Utilisateur;
+use App\Entity\Produit;
 use App\Service\Api\FavorisApiService;
 use Symfony\Bundle\SecurityBundle\Security;
 use Twig\Extension\AbstractExtension;
@@ -22,6 +23,7 @@ class FavorisTwigExtension extends AbstractExtension
             new TwigFunction('is_favori', [$this, 'isFavori']),
             new TwigFunction('api_favoris_disponible', [$this, 'isApiDisponible']),
             new TwigFunction('nombre_favoris', [$this, 'getNombreFavoris']),
+            new TwigFunction('is_mon_produit', [$this, 'isMonProduit']),
         ];
     }
 
@@ -56,5 +58,23 @@ class FavorisTwigExtension extends AbstractExtension
         } catch (\Exception $e) {
             return 0;
         }
+    }
+
+    public function isMonProduit($produit): bool
+    {
+        $user = $this->security->getUser();
+        
+        if (!$user instanceof Utilisateur) {
+            return false;
+        }
+
+        // Vérifier si l'utilisateur est propriétaire du produit via la relation Appartient
+        foreach ($produit->getAppartients() as $appartient) {
+            if ($appartient->getUtilisateur() === $user) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
