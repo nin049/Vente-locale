@@ -6,150 +6,20 @@
 			{% block title %}Welcome!
 			{% endblock %}
 		</title>
-		{% block stylesheets %}
-			{{ encore_entry_link_tags('app') }}
-			{{ encore_entry_link_tags('app') }}
-			<!-- FontAwesome pour les icônes -->
-			<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-		{% endblock %}
+		<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>"> {% block stylesheets %}{% endblock %}
+            {{ encore_entry_link_tags('app') }}
+		<link rel="stylesheet" href="https://bootswatch.com/5/brite/bootstrap.css">
 		{% block javascripts %}
-			{{ encore_entry_script_tags('app') }}
-			{{ encore_entry_script_tags('app') }}
+            {% block importmap %}{{ importmap('app') }}{% endblock %}
+            {{ encore_entry_script_tags('app') }}
 		{% endblock %}
-		<!-- Tailwind CSS CDN : -->
-		<script src="https://cdn.tailwindcss.com"></script>
 	</head>
-	<body class="bg-gray-50 text-gray-800 font-sans">
-		<!-- Navbar Simple et Moderne -->
-		<nav class="bg-white shadow-sm border-b sticky top-0 z-50">
-			<div class="max-w-6xl mx-auto px-6">
-				<div class="flex justify-between items-center h-16">
-					
-					<!-- Logo Simple -->
-					<a href="{{ path('app_blog') }}" class="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-						<div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-							<i class="fas fa-store text-white text-sm"></i>
-						</div>
-						<span class="text-xl font-semibold text-gray-900">
-							Vente<span class="text-indigo-600">Locale</span>
-						</span>
-					</a>
-
-					<!-- Navigation Center -->
-					<div class="hidden md:flex items-center space-x-8">
-						<a href="{{ path('app_annonces') }}" class="text-gray-600 hover:text-indigo-600 transition-colors">
-							Annonces
-						</a>
-						{% if app.user %}
-							<a href="{{ path('app_messages_index') }}" class="text-gray-600 hover:text-indigo-600 transition-colors">
-								Messages
-							</a>
-							<a href="{{ path('app_favoris_index') }}" class="text-gray-600 hover:text-indigo-600 transition-colors">
-								Favoris
-							</a>
-						{% endif %}
-					</div>
-
-					<!-- User Menu -->
-					<div class="flex items-center space-x-4">
-						{% if app.user %}
-							<!-- Menu Déroulant Utilisateur -->
-							<div class="relative group">
-								<button class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-									<div class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
-										<i class="fas fa-user text-sm"></i>
-									</div>
-									<span class="hidden sm:block text-gray-700">{{ app.user.nom ?? 'Mon compte' }}</span>
-									<i class="fas fa-chevron-down text-xs text-gray-400"></i>
-								</button>
-								
-								<!-- Dropdown -->
-								<div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-									<a href="{{ path('app_mon_compte') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
-										<i class="fas fa-user mr-3 text-gray-400"></i>Mon compte
-									</a>
-									<a href="{{ path('app_parametres') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
-										<i class="fas fa-cog mr-3 text-gray-400"></i>Paramètres
-									</a>
-									{% if is_granted('ROLE_ADMIN') %}
-										<div class="border-t my-1"></div>
-										<a href="{{ path('admin_dashboard') }}" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
-											<i class="fas fa-shield-alt mr-3 text-gray-400"></i>Administration
-										</a>
-									{% endif %}
-									<div class="border-t my-1"></div>
-									<a href="{{ path('app_logout') }}" class="flex items-center px-4 py-2 text-red-600 hover:bg-red-50">
-										<i class="fas fa-sign-out-alt mr-3 text-red-400"></i>Se déconnecter
-									</a>
-								</div>
-							</div>
-						{% else %}
-							<!-- Boutons Connexion -->
-							<a href="{{ path('app_login') }}" class="text-gray-600 hover:text-indigo-600 transition-colors">
-								Se connecter
-							</a>
-							<a href="{{ path('app_register') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
-								S'inscrire
-							</a>
-						{% endif %}
-
-						<!-- Menu Mobile -->
-						<button class="md:hidden p-2 hover:bg-gray-100 rounded-lg" onclick="toggleMobileMenu()">
-							<i class="fas fa-bars text-gray-600"></i>
-						</button>
-					</div>
-				</div>
-
-				<!-- Menu Mobile -->
-				<div id="mobile-menu" class="md:hidden border-t py-4 hidden">
-					<div class="space-y-2">
-						<a href="{{ path('app_annonces') }}" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded">
-							Annonces
-						</a>
-						{% if app.user %}
-							<a href="{{ path('app_messages_index') }}" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded">
-								Messages
-							</a>
-							<a href="{{ path('app_favoris_index') }}" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded">
-								Favoris
-							</a>
-							<div class="border-t my-2"></div>
-							<a href="{{ path('app_mon_compte') }}" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded">
-								Mon compte
-							</a>
-							<a href="{{ path('app_parametres') }}" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded">
-								Paramètres
-							</a>
-							{% if is_granted('ROLE_ADMIN') %}
-								<a href="{{ path('admin_dashboard') }}" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded">
-									Administration
-								</a>
-							{% endif %}
-							<a href="{{ path('app_logout') }}" class="block px-4 py-2 text-red-600 hover:bg-red-50 rounded">
-								Se déconnecter
-							</a>
-						{% else %}
-							<a href="{{ path('app_login') }}" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded">
-								Se connecter
-							</a>
-							<a href="{{ path('app_register') }}" class="block px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 rounded mx-4">
-								S'inscrire
-							</a>
-						{% endif %}
-					</div>
-				</div>
-			</div>
-		</nav>
-
-		<script>
-			function toggleMobileMenu() {
-				document.getElementById('mobile-menu').classList.toggle('hidden');
-			}
-		</script>
-
-		<!-- Main Navigation -->
-		{% block header %}{% endblock %}
-		{% block body %}{% endblock %}
-		{% block footer %}{% endblock %}
+	<body>
+	<h1 class="">Welcome to Symfony!</h1>
+		{% block body %}
+		<div class="container">
+			{% block content %}{% endblock %}
+		</div>
+		{% endblock %}
 	</body>
 </html>
